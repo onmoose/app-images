@@ -66,7 +66,7 @@ python3 tools/build.py openmuse-server     # fetch, build, probe; nothing is pus
 1. Add `images/<image>/upstream.yml`, plus a `Dockerfile` if upstream has none.
 2. Run `tools/build.py` locally until the probe passes.
 3. Open a pull request. CI builds and probes it again.
-4. Merge. CI publishes `ghcr.io/onmoose/<image>:<tag>`. The first time, set the new package to **public** in the org's package settings, since GitHub creates packages private.
+4. Merge. CI publishes `ghcr.io/onmoose/<image>:<tag>`. A package this public repo's workflow creates comes out public, since the image's `org.opencontainers.image.source` label links it here. Check once that an anonymous pull works: a box pulls without logging in.
 
 ## Keeping current
 
