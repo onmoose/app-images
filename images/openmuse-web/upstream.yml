@@ -1,0 +1,14 @@
+# OpenMuse's web client (the Expo web export), served by nginx, which also
+# proxies /api/ to the API service named `server`. Upstream ships no image for it.
+repo: CopilotKit/OpenMuse
+ref_type: branch
+ref: main
+commit: fed01e9d6411ab773d9adf1aa490a07dc8c64d0b
+revision: 1
+license: MIT
+probe:
+  port: 8080
+  path: /
+  # nginx started as root drops to a worker user, which needs CAP_SETUID. moose runs
+  # this one with service_user: true, so only the non-root run has to pass.
+  as: [nonroot]
