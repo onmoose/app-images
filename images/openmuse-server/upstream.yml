@@ -1,0 +1,23 @@
+# OpenMuse's API: Hono plus the CopilotKit runtime, the task engine, and storage.
+# Upstream ships no Dockerfile for it, so the one in this folder is ours. It runs
+# upstream's own production commands: `pnpm build:server`, then `pnpm start`.
+repo: CopilotKit/OpenMuse
+ref_type: branch
+ref: main
+commit: fed01e9d6411ab773d9adf1aa490a07dc8c64d0b
+revision: 1
+license: MIT
+probe:
+  port: 8787
+  path: /api/health
+  # Sample mode refuses a non-loopback HOST, so the probe runs live mode with throwaway values.
+  env:
+    WORKSPACE_MODE: live
+    AGENT_BACKEND: model
+    MODEL: openai/probe
+    CPK_INTELLIGENCE_API_KEY: probe-only
+    OPENMUSE_ACCESS_KEY: probe-only-access-key-0123456789
+    TOKEN_ENCRYPTION_KEY: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
+    PUBLIC_API_URL: http://localhost:8787
+  tmpfs: [/tmp]
+  data: [/data]

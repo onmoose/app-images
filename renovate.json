@@ -1,0 +1,42 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+  "packageRules": [
+    {
+      "description": "Our own Dockerfiles pin base images by digest.",
+      "matchManagers": ["dockerfile"],
+      "pinDigests": true
+    },
+    {
+      "description": "A followed branch moves with every upstream push; bump it once a week, not on every commit.",
+      "matchDatasources": ["git-refs"],
+      "schedule": ["before 6am on monday"]
+    },
+    {
+      "description": "OpenMuse's three images share one upstream commit, so they move in one pull request.",
+      "matchDepNames": ["CopilotKit/OpenMuse"],
+      "groupName": "OpenMuse"
+    }
+  ],
+  "customManagers": [
+    {
+      "description": "An image that follows an upstream branch: bump the pinned commit when the branch moves.",
+      "customType": "regex",
+      "managerFilePatterns": ["/^images/[^/]+/upstream\\.yml$/"],
+      "matchStrings": [
+        "repo: (?<depName>\\S+)\\nref_type: branch\\nref: (?<currentValue>\\S+)\\ncommit: (?<currentDigest>[0-9a-f]{40})"
+      ],
+      "datasourceTemplate": "git-refs",
+      "packageNameTemplate": "https://github.com/{{{depName}}}"
+    },
+    {
+      "description": "An image that follows upstream releases: bump the tag and its commit together.",
+      "customType": "regex",
+      "managerFilePatterns": ["/^images/[^/]+/upstream\\.yml$/"],
+      "matchStrings": [
+        "repo: (?<depName>\\S+)\\nref_type: tag\\nref: (?<currentValue>\\S+)\\ncommit: (?<currentDigest>[0-9a-f]{40})"
+      ],
+      "datasourceTemplate": "github-tags"
+    }
+  ]
+}

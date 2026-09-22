@@ -1,0 +1,15 @@
+# syntax=docker/dockerfile:1
+# Context: the OpenMuse repo at the commit in upstream.yml. nginx.conf comes from this folder.
+FROM node:24.21.0-bookworm-slim@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6 AS build
+RUN corepack enable
+WORKDIR /src
+COPY . .
+RUN pnpm install --frozen-lockfile
+# "/" makes every API call relative (`/api/...`), so one image works on every box.
+# api.ts strips the trailing slash after the `||` fallback, which "/" passes.
+RUN EXPO_PUBLIC_API_URL=/ pnpm build:web
+
+FROM nginxinc/nginx-unprivileged:1.30.5-alpine@sha256:04a3275f25d766cff8926d2e57b2ff34a783d6b12a702dc98bb82226d2d9a508
+COPY --from=packaging nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /src/apps/mobile/dist/web /usr/share/nginx/html
+EXPOSE 8080
