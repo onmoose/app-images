@@ -67,8 +67,9 @@ Needs Docker with buildx and Python with PyYAML. Builds are `linux/amd64` only. 
 1. Check that upstream truly publishes no image, and that its license lets us give out binaries. MIT, Apache 2, BSD, GPL and AGPL do. No license means no. For anything else (SSPL, BSL, Commons Clause, source-available), ask the user before you build.
 2. Add `images/<image>/upstream.yml`, plus a `Dockerfile` if upstream has none. Start with `revision: 1`. Add a Renovate group for its upstream in `renovate.json` (see # Layout).
 3. Run `tools/build.py <image>` until the probe passes as every identity in `as:`.
-4. Open the PR. **Opening it is outward-facing, since the repo and the registry are public. Confirm with the user first.**
-5. After the merge publishes, check once that an anonymous pull works (`docker logout ghcr.io`, then `docker pull`). A box pulls without logging in.
+4. Open the PR. **A request to build an image is also a request to open its PR, so do not ask again.** Before you push, read the commit message and the PR body once more: the repo is public, so neither may name a private repo or its internals.
+5. Merge the PR once CI passes and nothing is left to check. Stop and ask instead when CI fails, a probe needed a narrowed `as:`, or the change holds a call the user has not made yet (a license outside the list in step 1, a dropped service).
+6. After the merge publishes, check once that an anonymous pull works (`docker logout ghcr.io`, then `docker pull`). A box pulls without logging in.
 
 ## How to write
 
@@ -85,6 +86,6 @@ These rules are the same across the moose repos (`onmoose/os` `CLAUDE.md` # Work
 ## Working style
 
 - **Project knowledge lives in checked-in files, never in a coding agent's local memory.** Anything worth remembering about this repo (a rule, a gotcha, why a folder looks the way it does) goes in this file, `README.md`, or a comment in the folder it is about.
-- **Work on a branch off latest `main`.** `main` is the only long-lived branch. Never commit straight to it. Commit and push only when the user asks.
+- **Work on a branch off latest `main`.** `main` is the only long-lived branch. Never commit straight to it. Commit and push only when the user asks. A request to build an image counts as that ask, through to the merge (# Adding an image).
 - **Work in the checked-out folder, not a worktree**, unless the folder has uncommitted work that a checkout would disturb.
 - **Push back on tradeoffs; defer to product calls once made.**
