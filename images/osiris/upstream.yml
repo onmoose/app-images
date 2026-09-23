@@ -1,0 +1,21 @@
+# OSIRIS: an OSINT situational-awareness dashboard (Next.js, standalone output).
+# Upstream ships its own Dockerfile, non-root by design (uid 1001, USER nextjs,
+# no runtime chown), so this folder has no Dockerfile of its own.
+repo: simplifaisoul/osiris
+ref_type: branch
+ref: master
+commit: 5f484bd049e1987b7059866923cc9bab2efd5800
+revision: 1
+license: MIT
+dockerfile: Dockerfile
+probe:
+  port: 3000
+  path: /api/health
+  # The app runs fully keyless: aviation, maritime, satellites, fires,
+  # earthquakes, weather, news and CVEs all use public feeds with no key.
+  # SCANNER_URL/SCANNER_KEY are left unset on purpose: the optional RECON
+  # sidecar (intel/) is not built here, so the UI's RECON tab answers 503,
+  # same as an operator who never sets a scanner up.
+  env:
+    NODE_OPTIONS: --dns-result-order=ipv4first
+  tmpfs: [/tmp]
