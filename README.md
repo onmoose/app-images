@@ -70,4 +70,4 @@ python3 tools/build.py openmuse-server     # fetch, build, probe; nothing is pus
 
 ## Keeping current
 
-Renovate opens a pull request when a followed branch moves (weekly) or a followed tag gets a new release, and when a base image in one of our Dockerfiles changes. Merging it publishes the new image. The catalog then picks up the new digest in its own version bump.
+Renovate opens one pull request per upstream each week. It moves the pinned commit when the followed branch moves or the followed tag gets a new release, and it moves the base images in our Dockerfiles in the same pull request. A base image change alone keeps the tag the same, so CI fails until someone bumps `revision:` on that pull request. Merging it publishes the new image. The catalog then picks up the new digest in its own version bump.

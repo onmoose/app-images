@@ -13,9 +13,10 @@
       "schedule": ["before 6am on monday"]
     },
     {
-      "description": "OpenMuse's three images share one upstream commit, so they move in one pull request.",
-      "matchDepNames": ["CopilotKit/OpenMuse"],
-      "groupName": "OpenMuse"
+      "description": "OpenMuse's three images share one upstream commit, so they move in one pull request. Their base images ride in the same pull request, on the same weekly schedule: a base image change alone keeps the tag the same, so CI fails until someone bumps revision:. Next to a commit move, the tag changes on its own.",
+      "matchFileNames": ["images/openmuse-*/**"],
+      "groupName": "OpenMuse",
+      "schedule": ["before 6am on monday"]
     }
   ],
   "customManagers": [
