@@ -25,7 +25,7 @@ tools/
 renovate.json                 # keeps pinned commits, base images and actions current
 ```
 
-One image per folder. Several images can share one upstream commit (the three `openmuse-*` images do). Renovate groups those so they move in one PR. Add a `packageRules` group in `renovate.json` when you add a second image from the same upstream.
+One image per folder. Several images can share one upstream commit (the three `openmuse-*` images do). Renovate groups those so they move in one PR. Every upstream needs a `packageRules` group in `renovate.json` that matches its folders by path (see the OpenMuse group), with the weekly schedule. The group also pulls in the base images of our Dockerfiles. A base image change alone keeps the tag the same, so its PR fails CI until someone bumps `revision:`. Next to a commit move, the tag changes on its own. When a base image moves in a week where upstream does not, push a `revision:` bump to the Renovate branch.
 
 ## Commands
 
@@ -65,7 +65,7 @@ Needs Docker with buildx and Python with PyYAML. Builds are `linux/amd64` only. 
 ## Adding an image
 
 1. Check that upstream truly publishes no image, and that its license lets us give out binaries. MIT, Apache 2, BSD, GPL and AGPL do. No license means no. For anything else (SSPL, BSL, Commons Clause, source-available), ask the user before you build.
-2. Add `images/<image>/upstream.yml`, plus a `Dockerfile` if upstream has none. Start with `revision: 1`.
+2. Add `images/<image>/upstream.yml`, plus a `Dockerfile` if upstream has none. Start with `revision: 1`. Add a Renovate group for its upstream in `renovate.json` (see # Layout).
 3. Run `tools/build.py <image>` until the probe passes as every identity in `as:`.
 4. Open the PR. **Opening it is outward-facing, since the repo and the registry are public. Confirm with the user first.**
 5. After the merge publishes, check once that an anonymous pull works (`docker logout ghcr.io`, then `docker pull`). A box pulls without logging in.
