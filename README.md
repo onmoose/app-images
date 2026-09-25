@@ -47,7 +47,16 @@ probe:
   data: [/data]                  # data dirs moose will bind and chown to the runtime identity
   as: [root, nonroot]            # which identities must pass (default: both)
   timeout: 60
+  services:                      # optional: companion containers the app needs to boot (a database, ...)
+    - name: database               # reachable from the app container as this hostname
+      image: postgres:17.6@sha256:...   # pinned by tag and digest, same as any other image
+      env: { POSTGRES_PASSWORD: probe-only-pw }   # throwaway values, never a real secret
+      ready:                        # optional: how to tell the companion is up
+        cmd: ["pg_isready", "-U", "postgres"]   # run with `docker exec` until it exits 0
+        timeout: 30                              # seconds to wait for cmd (or, with no cmd, a fixed sleep)
 ```
+
+`probe.services` starts each companion on its own docker network before the app container, and attaches the app container to that same network, so it can reach a companion by the `name` given. Companions are plain helpers: only the app container under test runs with `--cap-drop ALL`, `no-new-privileges`, and both identities. Everything (companions and their network) is removed after the probe, pass or fail.
 
 Keep `repo`, `ref_type`, `ref` and `commit` as the first four keys, in that order. Renovate finds them by that pattern.
 
