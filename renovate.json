@@ -23,6 +23,12 @@
       "matchFileNames": ["images/osiris/**"],
       "groupName": "OSIRIS",
       "schedule": ["before 6am on monday"]
+    },
+    {
+      "description": "opendray: one image, its own upstream commit, weekly schedule.",
+      "matchFileNames": ["images/opendray/**"],
+      "groupName": "opendray",
+      "schedule": ["before 6am on monday"]
     }
   ],
   "customManagers": [

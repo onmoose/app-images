@@ -125,12 +125,58 @@ def file_caps(ref):
         subprocess.run(["docker", "rm", "-f", cid], stdout=subprocess.DEVNULL)
 
 
-def probe_one(ref, probe, identity):
+def start_services(services, network):
+    """Start a probe's companion containers (a database, ...) on their own network,
+    so the app container under test can reach them by name. These containers are
+    plain helpers, not part of what the sandbox flags are proving: only the app
+    container runs --cap-drop ALL / no-new-privileges / as root and as uid 10001.
+    """
+    run(["docker", "network", "create", network], stdout=subprocess.DEVNULL)
+    names = []
+    for svc in services:
+        name = f"{network}-{svc['name']}"
+        cmd = ["docker", "run", "-d", "--name", name, "--network", network,
+               "--network-alias", svc["name"]]
+        for k, v in (svc.get("env") or {}).items():
+            cmd += ["-e", f"{k}={v}"]
+        run(cmd + [svc["image"]], stdout=subprocess.DEVNULL)
+        names.append(name)
+        wait_ready(name, svc.get("ready") or {})
+    return names
+
+
+def wait_ready(name, ready):
+    """Poll a companion's readiness command (docker exec) until it exits 0, or just
+    sleep a fixed wait when the service needs no such check.
+    """
+    cmd = ready.get("cmd")
+    timeout = ready.get("timeout", 30)
+    if not cmd:
+        time.sleep(timeout)
+        return
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if subprocess.run(["docker", "exec", name] + cmd,
+                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0:
+            return
+        time.sleep(1)
+    die(f"probe service {name} never became ready")
+
+
+def stop_services(names, network):
+    for name in names:
+        subprocess.run(["docker", "rm", "-f", name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.run(["docker", "network", "rm", network], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def probe_one(ref, probe, identity, network=None):
     uid = "0" if identity == "root" else NONROOT.split(":")[0]
     user = "0:0" if identity == "root" else NONROOT
     name = f"probe-{os.getpid()}-{identity}"
     cmd = ["docker", "run", "-d", "--name", name, "--cap-drop", "ALL",
            "--security-opt", "no-new-privileges:true", "--user", user]
+    if network:
+        cmd += ["--network", network]
     for k, v in (probe.get("env") or {}).items():
         cmd += ["-e", f"{k}={v}"]
     for path in probe.get("tmpfs") or []:
@@ -197,12 +243,21 @@ def probe(ref, spec):
         if c not in fatal:
             print(f"info file capabilities on {c} (fails if the app execs it)")
     must = p.get("as", ["root", "nonroot"])
-    for identity in ("root", "nonroot"):
-        passed, why = probe_one(ref, p, identity)
-        mark = "ok  " if passed else ("FAIL" if identity in must else "info")
-        print(f"{mark} as {identity}: {why}")
-        if not passed and identity in must:
-            ok = False
+    services = p.get("services") or []
+    network = f"probe-net-{os.getpid()}" if services else None
+    service_names = []
+    try:
+        if services:
+            service_names = start_services(services, network)
+        for identity in ("root", "nonroot"):
+            passed, why = probe_one(ref, p, identity, network=network)
+            mark = "ok  " if passed else ("FAIL" if identity in must else "info")
+            print(f"{mark} as {identity}: {why}")
+            if not passed and identity in must:
+                ok = False
+    finally:
+        if services:
+            stop_services(service_names, network)
     return ok
 
 

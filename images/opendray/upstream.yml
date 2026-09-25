@@ -1,0 +1,41 @@
+# opendray: a self-hosted gateway that runs AI coding CLIs (Claude Code,
+# Codex, OpenCode, a plain shell) in terminals that stay alive on the
+# server. Upstream publishes only signed release binaries, no image and no
+# Dockerfile (its README even says Docker is not a supported deploy path for
+# v2.x), so this folder builds it: `pnpm build` in app/web, then
+# `go build ./cmd/opendray` with CGO_ENABLED=0, both upstream's own
+# documented commands (see the Dockerfile).
+#
+# v2.17.8 is an annotated tag, so `commit:` below is the commit it points
+# to (e6e67e6...), not the tag object's own id (2ae44f8...). Renovate and
+# a plain `git fetch <sha>` both need the real commit.
+repo: Opendray/opendray
+ref_type: tag
+ref: v2.17.8
+commit: e6e67e61b761e1913d7007d9d6a3d8981645d7f7
+revision: 1
+license: Apache-2.0
+probe:
+  port: 8770
+  path: /api/v1/health
+  # opendray needs a real Postgres connection to boot: it applies its
+  # migrations and opens its store before it ever binds the listener. One
+  # migration needs the pgvector extension, which needs a superuser
+  # CREATE EXTENSION step opendray deliberately does not attempt itself (see
+  # its own migration file), so the companion's ready check does that once,
+  # then opendray's own migrations run clean against it.
+  env:
+    OPENDRAY_DATABASE_URL: postgres://postgres:probe-only-pw@database:5432/probe?sslmode=disable
+    OPENDRAY_ADMIN_USER: admin
+    OPENDRAY_ADMIN_PASSWORD: probe-only-admin-pw-0123456789
+  data: [/data/home]
+  timeout: 30
+  services:
+    - name: database
+      image: pgvector/pgvector:0.8.6-pg17@sha256:cf134a767f474095eeba57e0117be8e568e011a63f33fbf252f14c9b760f8e6f
+      env:
+        POSTGRES_PASSWORD: probe-only-pw
+        POSTGRES_DB: probe
+      ready:
+        cmd: ["sh", "-c", "pg_isready -U postgres -d probe && psql -U postgres -d probe -c 'CREATE EXTENSION IF NOT EXISTS vector;'"]
+        timeout: 30
