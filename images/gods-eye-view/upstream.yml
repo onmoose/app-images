@@ -1,0 +1,15 @@
+# God's Eye View: a 3D globe (Cesium) showing live aircraft, ships, satellites,
+# earthquakes, weather and public cameras. Upstream publishes no image and has
+# no Dockerfile on its release tag, so this folder holds ours.
+repo: bilawalsidhu/gods-eye-view
+ref_type: tag
+ref: v0.1.1
+commit: 451b0f692efd8a37e96fbfae297ea1529fdcf331
+revision: 1
+license: MIT
+probe:
+  port: 4173
+  path: /
+  env:
+    PUPPETEER_SKIP_DOWNLOAD: "1"
+  data: [/app/.gev-cache, /app/.gev-logs]
