@@ -29,6 +29,12 @@
       "matchFileNames": ["images/opendray/**"],
       "groupName": "opendray",
       "schedule": ["before 6am on monday"]
+    },
+    {
+      "description": "God's Eye View: one image, its own upstream commit, weekly schedule.",
+      "matchFileNames": ["images/gods-eye-view/**"],
+      "groupName": "God's Eye View",
+      "schedule": ["before 6am on monday"]
     }
   ],
   "customManagers": [
