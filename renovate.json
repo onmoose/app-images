@@ -35,6 +35,12 @@
       "matchFileNames": ["images/gods-eye-view/**"],
       "groupName": "God's Eye View",
       "schedule": ["before 6am on monday"]
+    },
+    {
+      "description": "Calibre-Web: one image, its own upstream tag, weekly schedule.",
+      "matchFileNames": ["images/calibre-web/**"],
+      "groupName": "Calibre-Web",
+      "schedule": ["before 6am on monday"]
     }
   ],
   "customManagers": [
