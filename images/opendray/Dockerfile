@@ -10,7 +10,7 @@
 # Build stage: pnpm builds the React SPA that Go's build embeds via
 # go:embed, then `go build` compiles the single opendray binary.
 FROM node:22.23.3-bookworm-slim@sha256:43ac6c60b8f89723f746e8a92ce91abd5017e627ce1ddfe4238355d3a30b772c AS node
-FROM golang:1.25.14-bookworm@sha256:3b4a11519ad929d1e1d261a12cff056f0c85b735253d7d861346b9c6f8b36437 AS build
+FROM golang:1.27.1-bookworm@sha256:69a7b9788769bec032d238959b61854e9ae87f57be9029ec04e9885fabf99195 AS build
 # Node 22 + npm/corepack, only to run `pnpm build` in this stage. bookworm's
 # own nodejs apt package is version 18, too old for opendray's pinned
 # engine, so this copies the same pinned node:22-bookworm-slim install this
