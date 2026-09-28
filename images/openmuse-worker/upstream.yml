@@ -3,7 +3,7 @@
 repo: CopilotKit/OpenMuse
 ref_type: branch
 ref: main
-commit: bb7ce4e1c6e523bf282a655c63621e3ed9e75150
+commit: 34b15bc80340e582fb8c25573646cfb0bbc5184d
 revision: 1
 license: MIT
 context: apps/worker
