@@ -8,9 +8,9 @@
 # upstream's "Manual installation" wiki page: install requirements.txt with
 # pip, then run `python3 cps.py`. No app code is changed.
 
-# Build stage: pip installs everything into a venv. Two packages from the
-# metadata group (faust-cchardet, pyppmd) publish no wheel for this Python,
-# so pip compiles them, which needs a C compiler. The compiler stays in this
+# Build stage: pip installs everything into a venv. Two packages the
+# metadata group pulls in publish no wheel for this Python: faust-cchardet
+# (listed in the group) and pyppmd (needed by py7zr). So pip compiles them, which needs a C compiler. The compiler stays in this
 # stage and never reaches the runtime image.
 FROM python:3.14.7-slim-trixie@sha256:51dafde81dbdb6ebde285137a295cf18a47ca95234fe388a343719cb97305b3d AS build
 RUN apt-get update \
