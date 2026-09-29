@@ -37,6 +37,12 @@
       "schedule": ["before 6am on monday"]
     },
     {
+      "description": "Lichen: one image, its own upstream tag on Tangled, weekly schedule.",
+      "matchFileNames": ["images/lichen/**"],
+      "groupName": "Lichen",
+      "schedule": ["before 6am on monday"]
+    },
+    {
       "description": "Calibre-Web: one image, its own upstream tag, weekly schedule.",
       "matchFileNames": ["images/calibre-web/**"],
       "groupName": "Calibre-Web",
@@ -49,7 +55,7 @@
       "customType": "regex",
       "managerFilePatterns": ["/^images/[^/]+/upstream\\.yml$/"],
       "matchStrings": [
-        "repo: (?<depName>\\S+)\\nref_type: branch\\nref: (?<currentValue>\\S+)\\ncommit: (?<currentDigest>[0-9a-f]{40})"
+        "repo: (?<depName>\\S+)\\nref_type: branch\\nref: (?<currentValue>\\S+)\\ncommit: (?<currentDigest>[0-9a-f]{40})(?!\\nhost:)"
       ],
       "datasourceTemplate": "git-refs",
       "packageNameTemplate": "https://github.com/{{{depName}}}"
@@ -59,9 +65,19 @@
       "customType": "regex",
       "managerFilePatterns": ["/^images/[^/]+/upstream\\.yml$/"],
       "matchStrings": [
-        "repo: (?<depName>\\S+)\\nref_type: tag\\nref: (?<currentValue>\\S+)\\ncommit: (?<currentDigest>[0-9a-f]{40})"
+        "repo: (?<depName>\\S+)\\nref_type: tag\\nref: (?<currentValue>\\S+)\\ncommit: (?<currentDigest>[0-9a-f]{40})(?!\\nhost:)"
       ],
       "datasourceTemplate": "github-tags"
+    },
+    {
+      "description": "An image whose upstream is not on GitHub and follows releases: `host:` follows `commit:`. Renovate reads the tags from that host's git URL.",
+      "customType": "regex",
+      "managerFilePatterns": ["/^images/[^/]+/upstream\\.yml$/"],
+      "matchStrings": [
+        "repo: (?<depName>\\S+)\\nref_type: tag\\nref: (?<currentValue>\\S+)\\ncommit: (?<currentDigest>[0-9a-f]{40})\\nhost: (?<host>\\S+)"
+      ],
+      "datasourceTemplate": "git-tags",
+      "packageNameTemplate": "https://{{{host}}}/{{{depName}}}.git"
     }
   ]
 }

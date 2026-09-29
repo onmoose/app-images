@@ -30,12 +30,13 @@ cosign verify ghcr.io/onmoose/<image>@<digest> \
 ## upstream.yml
 
 ```yaml
-repo: CopilotKit/OpenMuse        # GitHub owner/name
+repo: CopilotKit/OpenMuse        # owner/name on the host below
 ref_type: branch                 # branch or tag: what we follow
 ref: main                        # the branch or tag name
 commit: fed01e9d...              # the full commit SHA we build (Renovate keeps it current)
 revision: 1                      # our rebuild counter for the same source; bump it to republish
 license: MIT                     # upstream's license
+host: github.com                 # optional: the git host, if it is not GitHub (`tangled.org`). Put it after `commit`.
 context: apps/worker             # optional: build context inside upstream's repo (default: the root)
 dockerfile: apps/worker/Dockerfile   # optional: upstream's Dockerfile; omit to use the one in this folder
 build_args: {}                   # optional
@@ -58,7 +59,9 @@ probe:
 
 `probe.services` starts each companion on its own docker network before the app container, and attaches the app container to that same network, so it can reach a companion by the `name` given. Companions are plain helpers: only the app container under test runs with `--cap-drop ALL`, `no-new-privileges`, and both identities. Everything (companions and their network) is removed after the probe, pass or fail.
 
-Keep `repo`, `ref_type`, `ref` and `commit` as the first four keys, in that order. Renovate finds them by that pattern.
+Keep `repo`, `ref_type`, `ref` and `commit` as the first four keys, in that order. Renovate finds them by that pattern. When `host:` is set, it must be the line right after `commit:`. Renovate reads it to look up tags on that host, and skips the GitHub rules for that file.
+
+**A source on another git host.** Set `host:` and the build fetches `https://<host>/<repo>.git` instead of GitHub. It still fetches the one pinned commit and nothing else. The `io.onmoose.upstream.repo` label carries the real URL. Only hosts that let a client fetch a commit by its SHA over plain HTTPS work.
 
 **The tag** is `<ref>-moose.<revision>` when following a tag, and `git-<short sha>-moose.<revision>` when following a branch. A published tag is never overwritten. If a folder changes and its tag already exists, CI fails until `revision` is bumped.
 

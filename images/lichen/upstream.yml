@@ -1,0 +1,23 @@
+# Lichen: a wiki app on AT Protocol (Bun). The source is on Tangled, not GitHub,
+# so `host:` names it. Upstream ships its own Containerfile, built for this
+# sandbox (drops all capabilities, read-only rootfs, no entrypoint script), so
+# this folder has no Dockerfile of its own.
+repo: juprodh.me/lichen.wiki
+ref_type: tag
+ref: v0.17.0
+commit: ba8713cbbe873a7ac9952aed2d04f327719c7557
+host: tangled.org
+revision: 1
+license: AGPL-3.0
+dockerfile: Containerfile
+probe:
+  port: 3000
+  path: /
+  # No PUBLIC_URL, so the app starts in its own dev mode (no OAuth). That is
+  # enough to prove the boot under the sandbox. The database goes to the data dir.
+  env:
+    HOST: 0.0.0.0
+    DB_PATH: /data/lichen.db
+    REGISTRY_DB_PATH: /data/registry.db
+  tmpfs: [/tmp]
+  data: [/data]

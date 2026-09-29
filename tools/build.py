@@ -52,6 +52,8 @@ def load(name):
     missing = [k for k in REQUIRED if k not in spec]
     if missing:
         die(f"{path}: missing {', '.join(missing)}")
+    if not re.fullmatch(r"[a-z0-9.-]+", str(spec.get("host", "github.com"))):
+        die(f"{path}: host must be a bare host name, like tangled.org")
     if spec["ref_type"] not in ("branch", "tag"):
         die(f"{path}: ref_type must be branch or tag")
     if not re.fullmatch(r"[0-9a-f]{40}", str(spec["commit"])):
@@ -63,6 +65,11 @@ def load(name):
     return spec
 
 
+def upstream_url(spec):
+    """Where the source lives. GitHub unless upstream.yml sets `host:` (Tangled, for one)."""
+    return f"https://{spec.get('host', 'github.com')}/{spec['repo']}"
+
+
 def image_tag(spec):
     version = spec["ref"] if spec["ref_type"] == "tag" else f"git-{spec['commit'][:7]}"
     return f"{version}-moose.{spec['revision']}"
@@ -71,7 +78,7 @@ def image_tag(spec):
 def fetch(spec, dest):
     """Fetch exactly the pinned commit, nothing else."""
     run(["git", "init", "-q", dest])
-    run(["git", "-C", dest, "fetch", "-q", "--depth", "1", f"https://github.com/{spec['repo']}.git", spec["commit"]])
+    run(["git", "-C", dest, "fetch", "-q", "--depth", "1", f"{upstream_url(spec)}.git", spec["commit"]])
     run(["git", "-C", dest, "checkout", "-q", "FETCH_HEAD"])
 
 
@@ -87,8 +94,8 @@ def build_args(name, spec, src, ref, cache, push):
         "org.opencontainers.image.version": image_tag(spec),
         "org.opencontainers.image.revision": spec["commit"],
         "org.opencontainers.image.licenses": spec["license"],
-        "org.opencontainers.image.description": f"Built by moose from github.com/{spec['repo']} at {spec['commit'][:7]}",
-        "io.onmoose.upstream.repo": f"https://github.com/{spec['repo']}",
+        "org.opencontainers.image.description": f"Built by moose from {upstream_url(spec).removeprefix('https://')} at {spec['commit'][:7]}",
+        "io.onmoose.upstream.repo": upstream_url(spec),
         "io.onmoose.upstream.commit": spec["commit"],
     }
     for k, v in labels.items():
