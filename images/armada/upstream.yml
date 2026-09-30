@@ -1,0 +1,23 @@
+# Armada: an end-to-end encrypted community chat client on Nostr. It is a static
+# single-page app, served by stock nginx. Upstream ships its own Dockerfile and
+# nginx.conf, so this folder has no Dockerfile of its own. The source is on
+# GitLab, so `host:` names it. No `build_args`: every VITE_* value keeps the
+# default compiled into upstream's source.
+repo: soapbox-pub/armada
+ref_type: tag
+ref: v0.45.0
+commit: efcef385f0d7627034fab61ccce6a3a64e993ea4
+host: gitlab.com
+revision: 1
+license: AGPL-3.0
+dockerfile: Dockerfile
+probe:
+  port: 80
+  path: /
+  # Stock nginx needs a writable cache dir and /run. The catalog compose mounts
+  # the same two, so the probe does too.
+  # Stock nginx started as root chowns its cache dir, which needs CAP_CHOWN. moose
+  # runs this app with service_user: true, so only the non-root run has to pass.
+  as: [nonroot]
+  tmpfs: [/run]
+  data: [/var/cache/nginx]
