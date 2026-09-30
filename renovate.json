@@ -49,6 +49,12 @@
       "schedule": ["before 6am on monday"]
     },
     {
+      "description": "Ditto: one image, its own upstream tag on GitLab, weekly schedule.",
+      "matchFileNames": ["images/ditto/**"],
+      "groupName": "Ditto",
+      "schedule": ["before 6am on monday"]
+    },
+    {
       "description": "Calibre-Web: one image, its own upstream tag, weekly schedule.",
       "matchFileNames": ["images/calibre-web/**"],
       "groupName": "Calibre-Web",
