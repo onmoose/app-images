@@ -1,0 +1,19 @@
+# Ditto: a Nostr client. It is a static single-page app (Vite + React), so the
+# image is the built `dist/` served by nginx. Upstream ships no Dockerfile, so
+# the Dockerfile and nginx.conf here are ours. The source is on GitLab, so
+# `host:` names it. No `ditto.json`: upstream compiles its default relays and
+# upload servers into the bundle (src/lib/appRelays.ts), so the defaults stand.
+repo: soapbox-pub/ditto
+ref_type: tag
+ref: v2.42.3
+commit: 0dee44303f067c1760d5990cd2a22f0dbb41a2b8
+host: gitlab.com
+revision: 1
+license: AGPL-3.0
+probe:
+  port: 8080
+  path: /
+  # Started as root, nginx chowns its temp dirs to its worker user, which needs
+  # CAP_CHOWN. moose runs this app with service_user: true, so only the non-root
+  # run has to pass. The folder for openmuse-web does the same.
+  as: [nonroot]
