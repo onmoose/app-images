@@ -9,7 +9,7 @@ RUN pnpm install --frozen-lockfile
 # api.ts strips the trailing slash after the `||` fallback, which "/" passes.
 RUN EXPO_PUBLIC_API_URL=/ pnpm build:web
 
-FROM nginxinc/nginx-unprivileged:1.31.6-alpine@sha256:6a23acdfca2b9cfbcec61419e3f1426bcbedb91362f2f19306a8567423bb4612
+FROM nginxinc/nginx-unprivileged:1.31.6-alpine@sha256:26b0bf6fbf07297983cb341998d79c831508787de26627dd2a112321b9c3a4af
 COPY --from=packaging nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /src/apps/mobile/dist/web /usr/share/nginx/html
 EXPOSE 8080
