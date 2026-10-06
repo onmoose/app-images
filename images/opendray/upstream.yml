@@ -13,7 +13,7 @@ repo: Opendray/opendray
 ref_type: tag
 ref: v2.17.8
 commit: e6e67e61b761e1913d7007d9d6a3d8981645d7f7
-revision: 1
+revision: 2
 license: Apache-2.0
 probe:
   port: 8770
