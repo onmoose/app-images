@@ -68,21 +68,21 @@
   ],
   "customManagers": [
     {
-      "description": "An image that follows an upstream branch: bump the pinned commit when the branch moves.",
+      "description": "An image that follows an upstream branch: bump the pinned commit when the branch moves. `revision:` must follow `commit:`, so a file with `host:` there does not match. Renovate runs regexes with RE2, which has no lookahead, so this cannot be written as (?!\\nhost:).",
       "customType": "regex",
       "managerFilePatterns": ["/^images/[^/]+/upstream\\.yml$/"],
       "matchStrings": [
-        "repo: (?<depName>\\S+)\\nref_type: branch\\nref: (?<currentValue>\\S+)\\ncommit: (?<currentDigest>[0-9a-f]{40})(?!\\nhost:)"
+        "repo: (?<depName>\\S+)\\nref_type: branch\\nref: (?<currentValue>\\S+)\\ncommit: (?<currentDigest>[0-9a-f]{40})\\nrevision:"
       ],
       "datasourceTemplate": "git-refs",
       "packageNameTemplate": "https://github.com/{{{depName}}}"
     },
     {
-      "description": "An image that follows upstream releases: bump the tag and its commit together.",
+      "description": "An image that follows upstream releases: bump the tag and its commit together. `revision:` must follow `commit:` (see the branch rule above).",
       "customType": "regex",
       "managerFilePatterns": ["/^images/[^/]+/upstream\\.yml$/"],
       "matchStrings": [
-        "repo: (?<depName>\\S+)\\nref_type: tag\\nref: (?<currentValue>\\S+)\\ncommit: (?<currentDigest>[0-9a-f]{40})(?!\\nhost:)"
+        "repo: (?<depName>\\S+)\\nref_type: tag\\nref: (?<currentValue>\\S+)\\ncommit: (?<currentDigest>[0-9a-f]{40})\\nrevision:"
       ],
       "datasourceTemplate": "github-tags"
     },

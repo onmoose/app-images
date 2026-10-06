@@ -50,7 +50,7 @@ Needs Docker with buildx and Python with PyYAML. Builds are `linux/amd64` only. 
 
 **Probe `env:` holds throwaway values only.** This repo is public. Use obvious fake values like `probe-only-...`. Never a real key, token or password.
 
-**Keep `repo`, `ref_type`, `ref` and `commit` as the first four keys of `upstream.yml`, in that order.** Renovate finds them with a regex over that exact shape. A reordered file silently stops getting updates.
+**Keep `repo`, `ref_type`, `ref` and `commit` as the first four keys of `upstream.yml`, in that order, with `host:` or else `revision:` right after `commit:`.** Renovate finds them with a regex over that exact shape. A reordered file silently stops getting updates.
 
 **Everything is pinned.** Upstream by full commit SHA. Base images in our Dockerfiles by tag and digest (`node:24.21.0-bookworm-slim@sha256:...`). GitHub Actions by commit SHA with the version in a comment. Renovate moves all three. Never add a floating tag or `latest`.
 

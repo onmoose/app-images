@@ -59,7 +59,7 @@ probe:
 
 `probe.services` starts each companion on its own docker network before the app container, and attaches the app container to that same network, so it can reach a companion by the `name` given. Companions are plain helpers: only the app container under test runs with `--cap-drop ALL`, `no-new-privileges`, and both identities. Everything (companions and their network) is removed after the probe, pass or fail.
 
-Keep `repo`, `ref_type`, `ref` and `commit` as the first four keys, in that order. Renovate finds them by that pattern. When `host:` is set, it must be the line right after `commit:`. Renovate reads it to look up tags on that host, and skips the GitHub rules for that file.
+Keep `repo`, `ref_type`, `ref` and `commit` as the first four keys, in that order. Renovate finds them by that pattern. When `host:` is set, it must be the line right after `commit:`. When it is not set, `revision:` must be the line right after `commit:`. Renovate reads it to look up tags on that host, and skips the GitHub rules for that file.
 
 **A source on another git host.** Set `host:` and the build fetches `https://<host>/<repo>.git` instead of GitHub. It still fetches the one pinned commit and nothing else. The `io.onmoose.upstream.repo` label carries the real URL. Only hosts that let a client fetch a commit by its SHA over plain HTTPS work.
 
