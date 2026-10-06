@@ -5,7 +5,7 @@ repo: bilawalsidhu/gods-eye-view
 ref_type: tag
 ref: v0.1.1
 commit: 65bc522f49dc1166eca533996be8e789ad36cfe5
-revision: 1
+revision: 2
 license: MIT
 probe:
   port: 4173
