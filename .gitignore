@@ -1,0 +1,2 @@
+# Python writes these when tools/build.py or tools/plan.py runs.
+__pycache__/
