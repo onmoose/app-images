@@ -79,6 +79,12 @@ def fetch(spec, dest):
     """Fetch exactly the pinned commit, nothing else."""
     run(["git", "init", "-q", dest])
     run(["git", "-C", dest, "fetch", "-q", "--depth", "1", f"{upstream_url(spec)}.git", spec["commit"]])
+    # An annotated tag has its own SHA. Fetching it still works, but the labels would then name
+    # the tag object, not the commit, and Renovate later swaps in the commit for no real change.
+    kind = subprocess.run(["git", "-C", dest, "cat-file", "-t", spec["commit"]],
+                          capture_output=True, text=True, check=True).stdout.strip()
+    if kind != "commit":
+        die(f"commit: {spec['commit']} is a {kind}, not a commit. Use the SHA on the `refs/tags/<ref>^{{}}` line of `git ls-remote`.")
     run(["git", "-C", dest, "checkout", "-q", "FETCH_HEAD"])
 
 

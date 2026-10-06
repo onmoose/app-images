@@ -33,7 +33,7 @@ cosign verify ghcr.io/onmoose/<image>@<digest> \
 repo: CopilotKit/OpenMuse        # owner/name on the host below
 ref_type: branch                 # branch or tag: what we follow
 ref: main                        # the branch or tag name
-commit: fed01e9d...              # the full commit SHA we build (Renovate keeps it current)
+commit: fed01e9d...              # the full commit SHA we build, never a tag object's SHA (Renovate keeps it current)
 revision: 1                      # our rebuild counter for the same source; bump it to republish
 license: MIT                     # upstream's license
 host: github.com                 # optional: the git host, if it is not GitHub (`tangled.org`). Put it after `commit`.

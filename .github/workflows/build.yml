@@ -18,8 +18,11 @@ on:
 permissions:
   contents: read
 
+# A new push to a PR cancels its old run. Each push to main gets its own group:
+# GitHub keeps only one waiting run per group and cancels the older one, so a
+# shared group on main would drop the publish of a merge that was still waiting.
 concurrency:
-  group: build-${{ github.ref }}
+  group: build-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
