@@ -3,6 +3,11 @@
   "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
   "packageRules": [
     {
+      "description": "Merge an update on its own once CI passes: CI builds and probes every image the update touches, and the merge publishes it. A failed build, probe or tag check blocks the merge, so a person handles only those.",
+      "matchPackageNames": ["*"],
+      "automerge": true
+    },
+    {
       "description": "Our own Dockerfiles pin base images by digest.",
       "matchManagers": ["dockerfile"],
       "pinDigests": true
