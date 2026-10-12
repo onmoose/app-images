@@ -4,7 +4,7 @@
 repo: simplifaisoul/osiris
 ref_type: branch
 ref: master
-commit: 7a3daec48708e5d9da8e053f08812aa0f617031e
+commit: 0aaba3838b550f83eeeaea99e5179d24f85ad65c
 revision: 1
 license: MIT
 dockerfile: Dockerfile
