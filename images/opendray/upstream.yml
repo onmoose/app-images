@@ -11,8 +11,8 @@
 # a plain `git fetch <sha>` both need the real commit.
 repo: Opendray/opendray
 ref_type: tag
-ref: v2.17.8
-commit: e6e67e61b761e1913d7007d9d6a3d8981645d7f7
+ref: v2.18.1
+commit: e02a9dd256d292d81965beb3cb76e53fd50e47c3
 revision: 2
 license: Apache-2.0
 probe:
