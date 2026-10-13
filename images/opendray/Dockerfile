@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32
+# syntax=docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
 # Context: the opendray repo at the commit in upstream.yml.
 #
 # opendray ships no Dockerfile of its own (its README says Docker is not a
@@ -9,8 +9,8 @@
 #
 # Build stage: pnpm builds the React SPA that Go's build embeds via
 # go:embed, then `go build` compiles the single opendray binary.
-FROM node:22.23.3-bookworm-slim@sha256:43ac6c60b8f89723f746e8a92ce91abd5017e627ce1ddfe4238355d3a30b772c AS node
-FROM golang:1.27.1-bookworm@sha256:69a7b9788769bec032d238959b61854e9ae87f57be9029ec04e9885fabf99195 AS build
+FROM node:22.23.3-bookworm-slim@sha256:c3de60bf2f9dd0ac6370e6117950ff62d6e339527e7472301c9c78a017978392 AS node
+FROM golang:1.27.2-bookworm@sha256:5cf287a799e6b94384bad13d16b14904c531f51ba65792237e122ce42b392f61 AS build
 # Node 22 + npm/corepack, only to run `pnpm build` in this stage. bookworm's
 # own nodejs apt package is version 18, too old for opendray's pinned
 # engine, so this copies the same pinned node:22-bookworm-slim install this
@@ -38,7 +38,7 @@ RUN CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o /out/opendray ./cmd/ope
 # CLIs opendray spawns (Claude Code, Codex, OpenCode) are installed at
 # runtime with `npm i -g` and some ship native/prebuilt bits that expect
 # glibc, not musl.
-FROM node:22.23.3-bookworm-slim@sha256:43ac6c60b8f89723f746e8a92ce91abd5017e627ce1ddfe4238355d3a30b772c
+FROM node:22.23.3-bookworm-slim@sha256:c3de60bf2f9dd0ac6370e6117950ff62d6e339527e7472301c9c78a017978392
 # git: opendray shells out to it for project/session status.
 # ripgrep: opendray's own /search endpoint execs `rg`; without it the
 # endpoint answers 501 (admissibility gate, Gate B).
