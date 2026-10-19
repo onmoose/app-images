@@ -3,8 +3,8 @@
 # no Dockerfile on its release tag, so this folder holds ours.
 repo: bilawalsidhu/gods-eye-view
 ref_type: tag
-ref: v0.1.1
-commit: 65bc522f49dc1166eca533996be8e789ad36cfe5
+ref: v0.2.1
+commit: aa16b7c3b0166a89d8c7a6089e0aff53a22faaee
 revision: 2
 license: MIT
 probe:
