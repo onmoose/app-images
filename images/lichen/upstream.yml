@@ -4,8 +4,8 @@
 # this folder has no Dockerfile of its own.
 repo: juprodh.me/lichen.wiki
 ref_type: tag
-ref: v0.17.0
-commit: ba8713cbbe873a7ac9952aed2d04f327719c7557
+ref: v0.19.0
+commit: 23228c09083912903bae13e4eaf07e9659d86ed5
 host: tangled.org
 revision: 1
 license: AGPL-3.0
