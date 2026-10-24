@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32
+# syntax=docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
 # Context: the calibre-web repo at the commit in upstream.yml.
 #
 # Upstream ships no Dockerfile and no current image. Its README points Docker
@@ -12,7 +12,7 @@
 # metadata group pulls in publish no wheel for this Python: faust-cchardet
 # (listed in the group) and pyppmd (needed by py7zr). So pip compiles them, which needs a C compiler. The compiler stays in this
 # stage and never reaches the runtime image.
-FROM python:3.14.7-slim-trixie@sha256:51dafde81dbdb6ebde285137a295cf18a47ca95234fe388a343719cb97305b3d AS build
+FROM python:3.15.1-slim-trixie@sha256:533b0b2f9b5d46fd097091cf826f27902f1d6c3bca714b6dc74551356aa97a51 AS build
 RUN apt-get update \
     && apt-get install -y --no-install-recommends build-essential \
     && rm -rf /var/lib/apt/lists/*
@@ -32,7 +32,7 @@ RUN python3 -c 'import tomllib; g = tomllib.load(open("pyproject.toml", "rb"))["
     && pip install --no-cache-dir -r requirements.txt -r extras.txt
 
 # Runtime stage.
-FROM python:3.14.7-slim-trixie@sha256:51dafde81dbdb6ebde285137a295cf18a47ca95234fe388a343719cb97305b3d
+FROM python:3.15.1-slim-trixie@sha256:533b0b2f9b5d46fd097091cf826f27902f1d6c3bca714b6dc74551356aa97a51
 
 # Runtime libraries upstream's README lists:
 # - libmagic1: python-magic (a core requirement) loads it to detect file types.
