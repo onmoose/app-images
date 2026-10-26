@@ -9,8 +9,8 @@
 #
 # Build stage: pnpm builds the React SPA that Go's build embeds via
 # go:embed, then `go build` compiles the single opendray binary.
-FROM node:22.23.3-bookworm-slim@sha256:c3de60bf2f9dd0ac6370e6117950ff62d6e339527e7472301c9c78a017978392 AS node
-FROM golang:1.27.2-bookworm@sha256:5cf287a799e6b94384bad13d16b14904c531f51ba65792237e122ce42b392f61 AS build
+FROM node:22.23.4-bookworm-slim@sha256:de170b39439eb0e5a3444ad7d60b015614a381e10fecae2e30ec9e735122f38d AS node
+FROM golang:1.27.3-bookworm@sha256:972b4110ba0f47539a975c31e52c64765e1ff19f2d74469ae4a595c6676e80a5 AS build
 # Node 22 + npm/corepack, only to run `pnpm build` in this stage. bookworm's
 # own nodejs apt package is version 18, too old for opendray's pinned
 # engine, so this copies the same pinned node:22-bookworm-slim install this
@@ -38,7 +38,7 @@ RUN CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o /out/opendray ./cmd/ope
 # CLIs opendray spawns (Claude Code, Codex, OpenCode) are installed at
 # runtime with `npm i -g` and some ship native/prebuilt bits that expect
 # glibc, not musl.
-FROM node:22.23.3-bookworm-slim@sha256:c3de60bf2f9dd0ac6370e6117950ff62d6e339527e7472301c9c78a017978392
+FROM node:22.23.4-bookworm-slim@sha256:de170b39439eb0e5a3444ad7d60b015614a381e10fecae2e30ec9e735122f38d
 # git: opendray shells out to it for project/session status.
 # ripgrep: opendray's own /search endpoint execs `rg`; without it the
 # endpoint answers 501 (admissibility gate, Gate B).
