@@ -259,8 +259,10 @@ def probe_one(ref, probe, identity, network=None):
     for path in probe.get("tmpfs") or []:
         cmd += ["--tmpfs", f"{path}:mode=1777"]
     # moose creates every data bind and chowns it to the runtime identity; a tmpfs owned by that uid stands in for it.
+    # Docker mounts a tmpfs noexec by default, but a data bind on a box is not, so `exec` keeps the two the same
+    # (a terminal app installs its CLI into the home and runs it from there).
     for path in probe.get("data") or []:
-        cmd += ["--tmpfs", f"{path}:uid={uid},gid={uid},mode=0755"]
+        cmd += ["--tmpfs", f"{path}:uid={uid},gid={uid},mode=0755,exec"]
     port = probe.get("port")
     if port:
         cmd += ["-p", f"127.0.0.1::{port}"]
@@ -269,15 +271,17 @@ def probe_one(ref, probe, identity, network=None):
         start = time.time()
         deadline = start + probe.get("timeout", 60)
         url = None
+        want_log = probe.get("log")
         while time.time() < deadline:
             state = subprocess.run(["docker", "inspect", "-f", "{{.State.Running}}", name],
                                    capture_output=True, text=True).stdout.strip()
             if state != "true":
                 return False, "container exited"
+            answer = None
             if not port:
                 # Nothing to ask, so "still up after settle seconds" is the pass.
                 if time.time() - start >= probe.get("settle", 15):
-                    return True, "still running"
+                    answer = "still running"
             else:
                 if url is None:
                     host = subprocess.run(["docker", "port", name, str(port)], capture_output=True, text=True).stdout.split()
@@ -285,13 +289,22 @@ def probe_one(ref, probe, identity, network=None):
                 if url:
                     try:
                         with urllib.request.urlopen(url, timeout=3) as r:
-                            return True, f"HTTP {r.status}"
+                            answer = f"HTTP {r.status}"
                     except urllib.error.HTTPError as e:
                         if e.code < 500:
-                            return True, f"HTTP {e.code}"
+                            answer = f"HTTP {e.code}"
                     except (urllib.error.URLError, ConnectionError, TimeoutError):
                         pass
+            if answer and want_log:
+                # The app answers before a start step is done, so wait for the line that says it worked.
+                out = subprocess.run(["docker", "logs", name], capture_output=True, text=True)
+                if want_log in out.stdout + out.stderr:
+                    return True, f"{answer}, log has {want_log!r}"
+            elif answer:
+                return True, answer
             time.sleep(2)
+        if want_log:
+            return False, f"timed out waiting for the app to answer and log {want_log!r}"
         return False, "timed out waiting for the app to answer"
     finally:
         logs = subprocess.run(["docker", "logs", "--tail", "30", name], capture_output=True, text=True)

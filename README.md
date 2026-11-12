@@ -49,6 +49,7 @@ probe:
   tmpfs: [/tmp]                  # scratch dirs moose's compose will mount as tmpfs
   data: [/data]                  # data dirs moose will bind and chown to the runtime identity
   as: [root, nonroot]            # which identities must pass (default: both)
+  log: "is installed"            # optional: a line the app must also print before the probe passes
   timeout: 60
   services:                      # optional: companion containers the app needs to boot (a database, ...)
     - name: database               # reachable from the app container as this hostname

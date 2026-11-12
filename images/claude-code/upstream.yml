@@ -1,0 +1,25 @@
+# Claude Code, Anthropic's AI coding agent, as a moose terminal app on the
+# moose-terminal base. Anthropic publishes no image to run it as a web app.
+#
+# The image holds only the version below, never Anthropic's binary: at start it
+# installs this version into the home with Anthropic's native installer (see the
+# Dockerfile). The npm package carries the same version numbers as the native
+# builds, so Renovate follows its releases here.
+npm: "@anthropic-ai/claude-code"
+version: 2.1.322
+revision: 1
+# The license of what this image holds: moose-terminal and our start script.
+# Claude Code itself is not in the image. It is "All rights reserved" by
+# Anthropic, and each box downloads it under Anthropic's terms.
+license: MIT
+probe:
+  port: 7681
+  path: /
+  tmpfs: [/tmp]
+  data: [/home/moose]
+  # The page answers even when the install fails (a failed start step is only a
+  # warning, so the terminal still opens). So the probe also waits for the line
+  # start.d/claude-code.sh prints once the pinned version runs.
+  log: "is installed, as pinned"
+  # The first start downloads Claude Code.
+  timeout: 240
