@@ -7,8 +7,10 @@
 set -euo pipefail
 
 want="$CLAUDE_CODE_VERSION"
-saved="$HOME/.local/state/moose-terminal/claude-code-version"
-if [ "$(cat "$saved" 2>/dev/null)" = "$want" ] && [ -x "$HOME/.local/bin/claude" ]; then
+# Ask the binary itself, so the pin also holds after a user updates it by hand.
+installed() { "$HOME/.local/bin/claude" --version 2>/dev/null | awk '{print $1}' || true; }
+
+if [ "$(installed)" = "$want" ]; then
   echo "Claude Code $want is installed, as pinned"
   exit 0
 fi
@@ -20,12 +22,16 @@ curl -fsSL --retry 3 https://claude.ai/install.sh -o "$tmp/install.sh"
 # DISABLE_UPDATES (set in the image) also blocks `claude install`, which the
 # installer runs. It is lifted for this one command only.
 env -u DISABLE_UPDATES bash "$tmp/install.sh" "$want"
+# The installer skips a version the home already holds, so after a move to an
+# older pin and back, the launcher still points at the older one. --force makes
+# Claude Code's own installer switch it.
+if [ "$(installed)" != "$want" ]; then
+  env -u DISABLE_UPDATES "$HOME/.local/bin/claude" install --force "$want"
+fi
 
-got=$("$HOME/.local/bin/claude" --version | awk '{print $1}')
+got=$(installed)
 if [ "$got" != "$want" ]; then
-  echo "error: the installer left Claude Code $got, not $want" >&2
+  echo "error: the installer left Claude Code ${got:-missing}, not $want" >&2
   exit 1
 fi
-mkdir -p "$(dirname "$saved")"
-echo "$want" > "$saved"
 echo "Claude Code $want is installed, as pinned"

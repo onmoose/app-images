@@ -296,7 +296,7 @@ def probe_one(ref, probe, identity, network=None):
                     except (urllib.error.URLError, ConnectionError, TimeoutError):
                         pass
             if answer and want_log:
-                # The app answers before a start step is done, so wait for the line that says it worked.
+                # The app can answer even when a start step failed (a failure is only a warning), so also wait for the line that says it worked.
                 out = subprocess.run(["docker", "logs", name], capture_output=True, text=True)
                 if want_log in out.stdout + out.stderr:
                     return True, f"{answer}, log has {want_log!r}"
