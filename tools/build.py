@@ -9,6 +9,12 @@
 The probe is the moose sandbox: --cap-drop ALL and no-new-privileges, once as root
 and once as a non-root uid, plus a scan for file capabilities. An image that fails
 it is never pushed. See README.md for the upstream.yml format.
+
+An image comes from one of four kinds of source, named by the first key of upstream.yml:
+  repo:      a git commit of upstream's repo (most images)
+  source:    `own`: no upstream, the folder holds our own source (moose-terminal)
+  npm:       a version of an npm package, which our Dockerfile installs
+  release:   a version of a GitHub release, which our Dockerfile downloads
 """
 
 import argparse
@@ -30,7 +36,13 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REGISTRY = "ghcr.io/onmoose"
 SOURCE_REPO = "https://github.com/onmoose/app-images"
 NONROOT = "10001:10001"
-REQUIRED = ("repo", "ref_type", "ref", "commit", "revision", "license")
+# The first key names the kind. Each kind needs these keys.
+KINDS = {
+    "repo": ("repo", "ref_type", "ref", "commit", "revision", "license"),
+    "source": ("source", "revision", "license"),
+    "npm": ("npm", "version", "revision", "license"),
+    "release": ("release", "version", "revision", "license"),
+}
 
 
 def die(msg):
@@ -49,15 +61,33 @@ def load(name):
         die(f"{path} not found")
     with open(path) as f:
         spec = yaml.safe_load(f)
-    missing = [k for k in REQUIRED if k not in spec]
+    kind = next(iter(spec), None) if isinstance(spec, dict) else None
+    if kind not in KINDS:
+        die(f"{path}: the first key must be one of {', '.join(KINDS)}")
+    spec["kind"] = kind
+    missing = [k for k in KINDS[kind] if k not in spec]
     if missing:
         die(f"{path}: missing {', '.join(missing)}")
-    if not re.fullmatch(r"[a-z0-9.-]+", str(spec.get("host", "github.com"))):
-        die(f"{path}: host must be a bare host name, like tangled.org")
-    if spec["ref_type"] not in ("branch", "tag"):
-        die(f"{path}: ref_type must be branch or tag")
-    if not re.fullmatch(r"[0-9a-f]{40}", str(spec["commit"])):
-        die(f"{path}: commit must be a full 40-character SHA")
+    if kind == "repo":
+        if not re.fullmatch(r"[a-z0-9.-]+", str(spec.get("host", "github.com"))):
+            die(f"{path}: host must be a bare host name, like tangled.org")
+        if spec["ref_type"] not in ("branch", "tag"):
+            die(f"{path}: ref_type must be branch or tag")
+        if not re.fullmatch(r"[0-9a-f]{40}", str(spec["commit"])):
+            die(f"{path}: commit must be a full 40-character SHA")
+    else:
+        # Only a git source has upstream files to build from, so the rest use our Dockerfile.
+        for key in ("host", "context", "dockerfile"):
+            if key in spec:
+                die(f"{path}: {key}: works only with repo:")
+    if kind == "source" and spec["source"] != "own":
+        die(f"{path}: source: must be own")
+    if kind == "release" and not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", str(spec["release"])):
+        die(f"{path}: release: must be owner/name of a GitHub repo")
+    # YAML reads 1.10 as the number 1.1, so a version must come back as text.
+    if kind in ("npm", "release") and not (isinstance(spec["version"], str)
+                                           and re.fullmatch(r"v?[0-9][0-9A-Za-z.+-]*", spec["version"])):
+        die(f"{path}: version: must be one exact version, like 1.2.3 (quote one with a single dot: \"1.10\")")
     if not isinstance(spec["revision"], int) or spec["revision"] < 1:
         die(f"{path}: revision must be a whole number from 1")
     if "dockerfile" not in spec and not os.path.isfile(os.path.join(ROOT, "images", name, "Dockerfile")):
@@ -71,8 +101,47 @@ def upstream_url(spec):
 
 
 def image_tag(spec):
-    version = spec["ref"] if spec["ref_type"] == "tag" else f"git-{spec['commit'][:7]}"
+    # Our own source has no upstream version, so its tag is the revision alone.
+    if spec["kind"] == "source":
+        return str(spec["revision"])
+    if spec["kind"] == "repo":
+        version = spec["ref"] if spec["ref_type"] == "tag" else f"git-{spec['commit'][:7]}"
+    else:
+        version = spec["version"]
     return f"{version}-moose.{spec['revision']}"
+
+
+def this_commit():
+    """This repo's commit, for the labels of an image with no upstream commit."""
+    r = subprocess.run(["git", "-C", ROOT, "rev-parse", "HEAD"], capture_output=True, text=True)
+    return r.stdout.strip() if r.returncode == 0 else "unknown"
+
+
+def labels(name, spec):
+    common = {
+        "org.opencontainers.image.source": SOURCE_REPO,
+        "org.opencontainers.image.version": image_tag(spec),
+        "org.opencontainers.image.licenses": spec["license"],
+    }
+    kind = spec["kind"]
+    if kind == "repo":
+        return {**common,
+                "org.opencontainers.image.revision": spec["commit"],
+                "org.opencontainers.image.description": f"Built by moose from {upstream_url(spec).removeprefix('https://')} at {spec['commit'][:7]}",
+                "io.onmoose.upstream.repo": upstream_url(spec),
+                "io.onmoose.upstream.commit": spec["commit"]}
+    common["org.opencontainers.image.revision"] = this_commit()
+    if kind == "source":
+        return {**common, "org.opencontainers.image.description": f"Built by moose from its own source in images/{name}"}
+    if kind == "npm":
+        return {**common,
+                "org.opencontainers.image.description": f"Built by moose for the npm package {spec['npm']} {spec['version']}",
+                "io.onmoose.upstream.npm": spec["npm"],
+                "io.onmoose.upstream.version": str(spec["version"])}
+    return {**common,
+            "org.opencontainers.image.description": f"Built by moose from the {spec['release']} release {spec['version']}",
+            "io.onmoose.upstream.repo": f"https://github.com/{spec['release']}",
+            "io.onmoose.upstream.version": str(spec["version"])}
 
 
 def fetch(spec, dest):
@@ -91,21 +160,16 @@ def fetch(spec, dest):
 def build_args(name, spec, src, ref, cache, push):
     folder = os.path.join(ROOT, "images", name)
     dockerfile = os.path.join(src, spec["dockerfile"]) if "dockerfile" in spec else os.path.join(folder, "Dockerfile")
-    context = os.path.join(src, spec.get("context", "."))
     # The build context is upstream's source; our own files (an nginx.conf) come in as `packaging`.
+    # With no upstream source (own, npm, release), the context is this folder too.
+    context = os.path.join(src, spec.get("context", ".")) if src else folder
     cmd = ["docker", "buildx", "build", "--platform", "linux/amd64", "-f", dockerfile, "-t", ref,
            "--build-context", f"packaging={folder}"]
-    labels = {
-        "org.opencontainers.image.source": SOURCE_REPO,
-        "org.opencontainers.image.version": image_tag(spec),
-        "org.opencontainers.image.revision": spec["commit"],
-        "org.opencontainers.image.licenses": spec["license"],
-        "org.opencontainers.image.description": f"Built by moose from {upstream_url(spec).removeprefix('https://')} at {spec['commit'][:7]}",
-        "io.onmoose.upstream.repo": upstream_url(spec),
-        "io.onmoose.upstream.commit": spec["commit"],
-    }
-    for k, v in labels.items():
+    for k, v in labels(name, spec).items():
         cmd += ["--label", f"{k}={v}"]
+    # An npm or release image installs the version upstream.yml pins, so the Dockerfile gets it.
+    if spec["kind"] in ("npm", "release"):
+        cmd += ["--build-arg", f"VERSION={spec['version']}"]
     for k, v in (spec.get("build_args") or {}).items():
         cmd += ["--build-arg", f"{k}={v}"]
     if cache == "gha":
@@ -293,7 +357,10 @@ def main():
     spec = load(args.name)
     tag = image_tag(spec)
     remote = f"{REGISTRY}/{args.name}:{tag}"
-    print(f"{args.name}: {spec['repo']}@{spec['commit'][:7]} -> {remote}")
+    what = {"repo": lambda: f"{spec['repo']}@{spec['commit'][:7]}", "source": lambda: "own source",
+            "npm": lambda: f"npm {spec['npm']}@{spec['version']}",
+            "release": lambda: f"release {spec['release']}@{spec['version']}"}[spec["kind"]]()
+    print(f"{args.name}: {what} -> {remote}")
 
     # A published tag is never overwritten: the catalog pins digests, and a rebuild is a new revision.
     # --check-tag applies the same rule on a pull request, before anything is pushed.
@@ -306,11 +373,18 @@ def main():
 
     work = tempfile.mkdtemp(prefix=f"app-images-{args.name}-")
     try:
-        src = os.path.join(work, "src")
-        fetch(spec, src)
-        # Timestamps come from the upstream commit, so the probed build and the pushed build match.
-        os.environ["SOURCE_DATE_EPOCH"] = subprocess.run(
-            ["git", "-C", src, "log", "-1", "--format=%ct"], check=True, capture_output=True, text=True).stdout.strip()
+        src = None
+        if spec["kind"] == "repo":
+            src = os.path.join(work, "src")
+            fetch(spec, src)
+            # Timestamps come from the upstream commit, so the probed build and the pushed build match.
+            epoch = subprocess.run(["git", "-C", src, "log", "-1", "--format=%ct"],
+                                   check=True, capture_output=True, text=True).stdout.strip()
+        else:
+            # No upstream commit: the folder's last commit here. A folder not committed yet uses now.
+            epoch = subprocess.run(["git", "-C", ROOT, "log", "-1", "--format=%ct", "--", f"images/{args.name}"],
+                                   capture_output=True, text=True).stdout.strip() or str(int(time.time()))
+        os.environ["SOURCE_DATE_EPOCH"] = epoch
         local = f"app-images/{args.name}:probe"
         run(build_args(args.name, spec, src, local, args.cache, push=False))
         if not probe(local, spec):

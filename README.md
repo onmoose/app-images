@@ -6,6 +6,8 @@ moose installs apps from prebuilt images. Some good apps never publish one: thei
 
 This repo holds **packaging only**. It never changes an app's code. A fix to the app goes upstream as a pull request. When upstream starts publishing its own image, we switch to theirs and delete the folder here.
 
+It also builds moose's **terminal apps**: command-line tools such as AI coding agents, opened in a browser tab. They build on one base image, `moose-terminal`, whose small project page and start script are our own source (`images/moose-terminal/src/`). Some of these tools come as an npm package or a GitHub release binary, not as a git repo to build. See [Other kinds of source](#other-kinds-of-source).
+
 ## How it works
 
 One folder per image under `images/`. A folder points at the upstream repo at a pinned commit. There are no forks: the build fetches exactly that commit and builds it.
@@ -65,6 +67,39 @@ Keep `repo`, `ref_type`, `ref` and `commit` as the first four keys, in that orde
 
 **The tag** is `<ref>-moose.<revision>` when following a tag, and `git-<short sha>-moose.<revision>` when following a branch. A published tag is never overwritten. If a folder changes and its tag already exists, CI fails until `revision` is bumped.
 
+## Other kinds of source
+
+The first key of `upstream.yml` says where the source comes from. `repo:` (above) is a git commit. Three more kinds exist, for terminal apps:
+
+```yaml
+# An npm package. Our Dockerfile installs it; it gets the version as the VERSION build arg.
+npm: "@scope/package"            # quoted: a YAML value cannot start with @
+version: 1.2.3                   # one exact version (Renovate keeps it current)
+revision: 1
+license: MIT
+```
+
+```yaml
+# A binary on a GitHub release. Our Dockerfile downloads it; it gets the version as VERSION.
+release: owner/name              # the GitHub repo that publishes the release
+version: v1.2.3                  # the release tag (Renovate keeps it current)
+revision: 1
+license: Apache-2.0
+```
+
+```yaml
+# Our own source, with no upstream (moose-terminal).
+source: own
+revision: 1
+license: MIT
+```
+
+These kinds have no upstream files, so the folder is the build context and needs its own `Dockerfile`. `host:`, `context:` and `dockerfile:` work only with `repo:`. `build_args:` and `probe:` work the same for every kind. Keep the keys in the order shown: Renovate finds `npm:` or `release:` with `version:` and `revision:` right after it.
+
+The tag is `<version>-moose.<revision>` for an npm package or a release. For our own source it is the revision alone (`1`, `2`), so every change to the folder bumps `revision:`.
+
+A tool that our own Dockerfile downloads (ttyd in `moose-terminal`) is pinned with an `ARG <NAME>_VERSION=` line and a `# renovate: datasource=<name> depName=<name>` comment on the line above it. The Dockerfile checks the download against the checksum file of the same release.
+
 ## Build one locally
 
 Needs Docker with buildx and Python with PyYAML.
@@ -82,4 +117,4 @@ python3 tools/build.py openmuse-server     # fetch, build, probe; nothing is pus
 
 ## Keeping current
 
-Renovate opens one pull request per upstream each week. It moves the pinned commit when the followed branch moves or the followed tag gets a new release, and it moves the base images in our Dockerfiles in the same pull request. A base image change alone keeps the tag the same, so CI fails until someone bumps `revision:` on that pull request. Merging it publishes the new image. The catalog then picks up the new digest in its own version bump.
+Renovate opens one pull request per upstream each week. It moves the pinned commit when the followed branch moves or the followed tag gets a new release (or the `version:` of an npm package or a release), and it moves the base images and the pinned tools in our Dockerfiles in the same pull request. A base image change alone keeps the tag the same, so CI fails until someone bumps `revision:` on that pull request. Merging it publishes the new image. The catalog then picks up the new digest in its own version bump.

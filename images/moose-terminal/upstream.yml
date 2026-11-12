@@ -1,0 +1,25 @@
+# moose-terminal: the base image of every moose terminal app (a command-line
+# tool such as an AI coding agent, opened in a browser tab). It has no upstream.
+# Its project page, start script and key bar are our own source, in src/. The
+# design is in onmoose/os docs/specs/TERMINAL_APPS.md.
+#
+# What it holds: ttyd and tmux, git, gh, ripgrep, curl, Node, Python and mise.
+# One port: / is the project page, /p/<folder>/<path> the terminal in that
+# folder, /clone a form that clones a repo. HOME is the persisted data dir.
+# A CLI image builds FROM this one, adds the CLI and sets MOOSE_TERMINAL_COMMAND.
+#
+# The tag is the revision alone. Bump it for every change in this folder,
+# including a Renovate move of the Node base or a tool version.
+source: own
+revision: 1
+# Our own files are MIT. The tools inside keep their own licenses: ttyd MIT,
+# tmux ISC, git GPL-2.0, gh MIT, ripgrep MIT, mise MIT, Node MIT, Python PSF.
+license: MIT
+probe:
+  port: 7681
+  # The project page. The server answers only once ttyd is up behind it.
+  path: /
+  # tmux and the ttyd socket live in /tmp, which moose mounts as a tmpfs.
+  tmpfs: [/tmp]
+  data: [/home/moose]
+  timeout: 60

@@ -8,6 +8,9 @@ Container images that moose builds for apps whose upstream publishes none. moose
 
 - **Packaging only.** We write Dockerfiles, config files like `nginx.conf`, and `upstream.yml`. We never change an app's code. A fix to the app goes upstream as a pull request. An app that needs an ongoing source patch does not belong here.
 - **No forks.** A folder points at upstream's repo at a pinned full commit SHA. The build fetches exactly that commit and nothing else (`tools/build.py` `fetch`).
+- **Two exceptions, for terminal apps** (command-line tools such as AI coding agents, opened in a browser tab; `onmoose/os` `docs/specs/TERMINAL_APPS.md`):
+  - **A folder with our own source.** `moose-terminal` is the base image of every terminal app. It has no upstream: its project page, start script and key bar are ours, in `images/moose-terminal/src/`. Its `upstream.yml` says `source: own`. This is the only kind of folder that holds code of ours, and it stays small. Code that belongs to one app still goes upstream.
+  - **An upstream that is an npm package or a GitHub release binary**, not a git commit. `upstream.yml` names the package (`npm:`) or the repo (`release:`) and pins one exact `version:`. Our Dockerfile installs that version (it gets it as the `VERSION` build arg). Renovate moves `version:` to upstream's newest release.
 - **We build upstream's release, not a version we pick.** Follow the newest release tag. When upstream has no tags, follow the default branch. The versions inside the app (its runtime, its dependencies) are upstream's call, taken from its lockfiles. An old version is not a finding.
 - **Upstream's own image wins.** When upstream starts to publish an image, moose switches to it and the folder here is deleted.
 
@@ -18,6 +21,8 @@ images/<image>/
   upstream.yml   # where the source comes from, the tag inputs, and how to probe the result
   Dockerfile     # ours, only when upstream has none (else upstream.yml names upstream's)
   ...            # any file our Dockerfile needs; the build sees this folder as the `packaging` context
+                 # (with no git upstream, the folder is also the build context)
+  src/           # moose-terminal only: our own source
 tools/
   build.py       # fetch, build, probe, and (with --push) publish one image
   plan.py        # print the CI matrix: which images a change rebuilds
@@ -42,7 +47,7 @@ Needs Docker with buildx and Python with PyYAML. Builds are `linux/amd64` only. 
 
 ## The rules a change must hold
 
-**A published tag is never overwritten.** The tag is `<ref>-moose.<revision>` for a followed tag, and `git-<short sha>-moose.<revision>` for a followed branch. Boxes pin images by digest, so a changed image under an old tag would lie about what it is. If you change anything in a folder and the upstream commit stays the same, bump `revision:`. CI fails the PR until you do (`plan.py` marks a changed folder `if_exists: fail`). When Renovate moves the commit, the tag changes on its own, so reset nothing.
+**A published tag is never overwritten.** The tag is `<ref>-moose.<revision>` for a followed tag, `git-<short sha>-moose.<revision>` for a followed branch, `<version>-moose.<revision>` for an npm package or a release, and the revision alone (`1`, `2`) for our own source. Boxes pin images by digest, so a changed image under an old tag would lie about what it is. If you change anything in a folder and the upstream commit (or `version:`) stays the same, bump `revision:`. CI fails the PR until you do (`plan.py` marks a changed folder `if_exists: fail`). When Renovate moves the commit or the version, the tag changes on its own, so reset nothing. A folder with our own source has no upstream to move its tag, so every change to it bumps `revision:`, a Renovate one too.
 
 **The probe is moose's sandbox.** It runs the image with `--cap-drop ALL` and `no-new-privileges`, once as root and once as uid 10001, and fails a start binary that carries file capabilities. An image that fails is never pushed. Do not weaken the probe to get an image through. If the image cannot pass under these rules, it cannot run on a box either. The probe copies how the moose OS runs an app, so a change to that model in `onmoose/os` needs the same change in `tools/build.py`, in the same unit of work.
 
@@ -50,9 +55,9 @@ Needs Docker with buildx and Python with PyYAML. Builds are `linux/amd64` only. 
 
 **Probe `env:` holds throwaway values only.** This repo is public. Use obvious fake values like `probe-only-...`. Never a real key, token or password.
 
-**Keep `repo`, `ref_type`, `ref` and `commit` as the first four keys of `upstream.yml`, in that order, with `host:` or else `revision:` right after `commit:`.** Renovate finds them with a regex over that exact shape. A reordered file silently stops getting updates.
+**Keep `repo`, `ref_type`, `ref` and `commit` as the first four keys of `upstream.yml`, in that order, with `host:` or else `revision:` right after `commit:`.** Renovate finds them with a regex over that exact shape. A reordered file silently stops getting updates. The other kinds start the same way: `npm:` (quoted, since it starts with `@` or holds a `/`), then `version:`, then `revision:`; `release:`, then `version:`, then `revision:`; `source: own`, then `revision:`. `tools/build.py` reads the kind from the first key.
 
-**Everything is pinned.** Upstream by full commit SHA. Base images in our Dockerfiles by tag and digest (`node:24.21.0-bookworm-slim@sha256:...`). GitHub Actions by commit SHA with the version in a comment. Renovate moves all three. Never add a floating tag or `latest`.
+**Everything is pinned.** Upstream by full commit SHA, or by one exact `version:` for an npm package or a release. Base images in our Dockerfiles by tag and digest (`node:24.21.0-bookworm-slim@sha256:...`). A tool our Dockerfile downloads by an `ARG <NAME>_VERSION=` line with a `# renovate: datasource=<name> depName=<name>` comment right above it, and checked against the checksum file of that release (see `images/moose-terminal/Dockerfile`). GitHub Actions by commit SHA with the version in a comment. Renovate moves all of them. Never add a floating tag or `latest`.
 
 **Upstream code never sees a secret.** The build runs upstream's code in BuildKit `RUN` steps, in the job that holds `packages: write`. Keep it that way: no `--secret`, no secret in `build_args`, no token in the build context. The registry login sits outside BuildKit on purpose (see the comment in `build.yml`).
 
@@ -65,7 +70,7 @@ Needs Docker with buildx and Python with PyYAML. Builds are `linux/amd64` only. 
 ## Adding an image
 
 1. Check that upstream truly publishes no image, and that its license lets us give out binaries. MIT, Apache 2, BSD, GPL and AGPL do. No license means no. For anything else (SSPL, BSL, Commons Clause, source-available), ask the user before you build.
-2. Add `images/<image>/upstream.yml`, plus a `Dockerfile` if upstream has none. Start with `revision: 1`. For a tag, `commit:` is the commit the tag points to. `git ls-remote <url> 'refs/tags/<ref>*'` prints two lines for an annotated tag: take the `^{}` line, not the tag's own SHA. `tools/build.py` fails on a tag SHA. Add a Renovate group for its upstream in `renovate.json` (see # Layout).
+2. Add `images/<image>/upstream.yml`, plus a `Dockerfile` if upstream has none (an npm package or a release always needs ours). Start with `revision: 1`. For a tag, `commit:` is the commit the tag points to. `git ls-remote <url> 'refs/tags/<ref>*'` prints two lines for an annotated tag: take the `^{}` line, not the tag's own SHA. `tools/build.py` fails on a tag SHA. Add a Renovate group for its upstream in `renovate.json` (see # Layout).
 3. Run `tools/build.py <image>` until the probe passes as every identity in `as:`.
 4. Open the PR. **A request to build an image is also a request to open its PR, so do not ask again.** Before you push, read the commit message and the PR body once more: the repo is public, so neither may name a private repo or its internals.
 5. Merge the PR once CI passes and nothing is left to check. Stop and ask instead when CI fails, a probe needed a narrowed `as:`, or the change holds a call the user has not made yet (a license outside the list in step 1, a dropped service).
