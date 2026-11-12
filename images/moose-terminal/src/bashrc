@@ -1,0 +1,6 @@
+# Added to /etc/bash.bashrc by the moose-terminal image.
+# mise puts the languages a user installs (Go, Rust, ...) on PATH, from the home.
+if command -v mise >/dev/null 2>&1; then
+  eval "$(mise activate bash)"
+fi
+PS1='\[\e[1;32m\]\w\[\e[0m\] \$ '

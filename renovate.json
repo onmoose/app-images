@@ -64,6 +64,12 @@
       "matchFileNames": ["images/calibre-web/**"],
       "groupName": "Calibre-Web",
       "schedule": ["before 6am on monday"]
+    },
+    {
+      "description": "moose-terminal: our own source, no upstream. Its Node base image and the tools its Dockerfile downloads (ttyd, gh, mise) move in one weekly pull request. Its tag is the revision alone, so each such pull request fails CI until someone bumps revision:.",
+      "matchFileNames": ["images/moose-terminal/**"],
+      "groupName": "moose-terminal",
+      "schedule": ["before 6am on monday"]
     }
   ],
   "customManagers": [
@@ -95,6 +101,32 @@
       ],
       "datasourceTemplate": "git-tags",
       "packageNameTemplate": "https://{{{host}}}/{{{depName}}}.git"
+    },
+    {
+      "description": "An image whose upstream is an npm package: bump `version:` to the newest release. `revision:` must follow `version:`. The name is quoted in the file, since a YAML value cannot start with @.",
+      "customType": "regex",
+      "managerFilePatterns": ["/^images/[^/]+/upstream\\.yml$/"],
+      "matchStrings": [
+        "npm: \"?(?<depName>[^\"\\s]+)\"?\\nversion: (?<currentValue>\\S+)\\nrevision:"
+      ],
+      "datasourceTemplate": "npm"
+    },
+    {
+      "description": "An image whose upstream is a binary on a GitHub release: bump `version:` to the newest release. `revision:` must follow `version:`.",
+      "customType": "regex",
+      "managerFilePatterns": ["/^images/[^/]+/upstream\\.yml$/"],
+      "matchStrings": [
+        "release: (?<depName>\\S+)\\nversion: (?<currentValue>\\S+)\\nrevision:"
+      ],
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "description": "A tool our own Dockerfile downloads at a pinned version: a `# renovate: datasource=<name> depName=<name>` comment on the line right above its `ARG <NAME>_VERSION=<version>` line.",
+      "customType": "regex",
+      "managerFilePatterns": ["/^images/[^/]+/Dockerfile$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\nARG [A-Z0-9_]+=(?<currentValue>\\S+)"
+      ]
     }
   ]
 }

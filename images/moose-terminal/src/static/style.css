@@ -1,0 +1,45 @@
+:root {
+  --bg: #ffffff; --fg: #1d1f21; --muted: #6b6f76; --line: #e3e5e8; --accent: #2f6fdd; --on: #2da44e; --err: #c0392b;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #16181c; --fg: #e8e9eb; --muted: #9a9ea6; --line: #2c3036; --accent: #6ea0ff; --on: #3fb950; --err: #ff7b72; }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 720px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { font-size: 1.5rem; margin: 0 0 16px; }
+h2 { font-size: 1rem; color: var(--muted); font-weight: 600; margin: 28px 0 8px; }
+a { color: var(--accent); }
+code { font-size: 0.9em; }
+.rows { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.rows li { display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--line); }
+.rows li > a { flex: 1; display: flex; align-items: center; gap: 10px; padding: 12px 4px; color: inherit; text-decoration: none; min-width: 0; }
+.rows li > a:hover .name { text-decoration: underline; }
+.name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.when { color: var(--muted); font-size: 0.875rem; white-space: nowrap; }
+.dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--line); flex: none; }
+.dot.on { background: var(--on); border-color: var(--on); }
+.empty { color: var(--muted); padding: 12px 4px; }
+.hint { color: var(--muted); font-size: 0.875rem; }
+.error { color: var(--err); }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+.actions form { display: flex; gap: 6px; flex: 1 1 280px; }
+.actions input { flex: 1; min-width: 0; }
+.stack { display: grid; gap: 12px; max-width: 480px; }
+.stack label { display: grid; gap: 4px; }
+input { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); }
+button { font: inherit; padding: 8px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); cursor: pointer; }
+button:hover { border-color: var(--muted); }
+button.small { padding: 4px 10px; font-size: 0.875rem; }
+
+/* The terminal page: a thin top bar, the terminal, and the key bar on touch screens. */
+body.terminal { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; background: #000; color: #ddd; }
+body.terminal header { display: flex; gap: 16px; align-items: center; padding: 6px 12px; font-size: 0.875rem; background: #111; }
+body.terminal header a { color: #9ec1ff; text-decoration: none; }
+body.terminal .folder { color: #aaa; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#term { flex: 1; width: 100%; border: 0; display: block; min-height: 0; }
+#keys { display: none; gap: 4px; padding: 4px; background: #111; overflow-x: auto; }
+#keys button { flex: 1 0 auto; min-width: 44px; padding: 8px 6px; background: #222; color: #eee; border-color: #333; }
+#keys button.armed { background: #2f6fdd; border-color: #2f6fdd; }
+@media (pointer: coarse) { #keys { display: flex; } }
