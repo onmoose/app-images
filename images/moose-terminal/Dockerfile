@@ -60,12 +60,16 @@ COPY --from=packaging src/ /opt/moose-terminal/
 RUN userdel node \
     && chmod 0755 /opt/moose-terminal/start.sh /opt/moose-terminal/session.sh \
     && cat /opt/moose-terminal/bashrc >> /etc/bash.bashrc \
-    && mkdir -p /opt/moose-terminal/start.d /moose/projects /moose/extra
+    && mkdir -p /opt/moose-terminal/start.d
 
 # HOME is the persisted data dir. moose binds it and chowns it to the runtime
-# uid. The tools that install "for the user" go there too: npm -g and pip
-# --user into ~/.local, mise into ~/.local/share/mise. PATH names them, since
-# a login shell would reset it (see session.sh).
+# uid. The tools that install "for the user" go there too: npm -g into
+# ~/.local, mise into ~/.local/share/mise, and a CLI's own installer into
+# ~/.local/bin. PATH names them, since a login shell would reset it (see
+# session.sh). Python packages go in a venv (python3 -m venv): Debian's Python
+# refuses pip installs outside one.
+# /moose/projects and /moose/extra are not made here. Only the folders moose
+# binds exist, so a folder the user skipped does not show on the page.
 ENV HOME=/home/moose \
     NPM_CONFIG_PREFIX=/home/moose/.local \
     PATH=/home/moose/.local/bin:/home/moose/.local/share/mise/shims:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
