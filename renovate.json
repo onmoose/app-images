@@ -70,6 +70,12 @@
       "matchFileNames": ["images/moose-terminal/**"],
       "groupName": "moose-terminal",
       "schedule": ["before 6am on monday"]
+    },
+    {
+      "description": "Claude Code: one image, its own npm version, weekly schedule. Its FROM moose-terminal rides in the same pull request. A base move alone keeps the tag the same, so CI fails until someone bumps revision:.",
+      "matchFileNames": ["images/claude-code/**"],
+      "groupName": "Claude Code",
+      "schedule": ["before 6am on monday"]
     }
   ],
   "customManagers": [
