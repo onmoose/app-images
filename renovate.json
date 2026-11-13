@@ -76,6 +76,13 @@
       "matchFileNames": ["images/claude-code/**"],
       "groupName": "Claude Code",
       "schedule": ["before 6am on monday"]
+    },
+    {
+      "description": "OpenCode: one image, its own npm version, weekly schedule. Its FROM moose-terminal rides in the same pull request. 2.x is held: it replaces `web` with `serve`, adds a background service and a generated server password, so this image needs re-authoring before it can follow that line.",
+      "matchFileNames": ["images/opencode/**"],
+      "groupName": "OpenCode",
+      "schedule": ["before 6am on monday"],
+      "allowedVersions": "<2.0.0"
     }
   ],
   "customManagers": [
