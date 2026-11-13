@@ -1,0 +1,31 @@
+# OpenCode, an open-source AI coding agent. It serves its own web UI, so this
+# image runs OpenCode's server instead of the moose-terminal project page: a
+# terminal app with a good official UI uses that UI (onmoose/os
+# docs/specs/TERMINAL_APPS.md # Options considered).
+#
+# The base is still right. Upstream's own image is the CLI alone on Alpine, with
+# no git and no language runtime, and an agent needs both to work on a project.
+# moose-terminal brings git, gh, Node, Python, ripgrep and mise, which is what
+# makes the app usable inside the sandbox.
+#
+# MIT, so the binary is in the image and a box never downloads it. The npm
+# package carries the same version numbers as the GitHub releases, so Renovate
+# follows its releases here.
+npm: opencode-ai
+version: 1.19.5
+revision: 1
+license: MIT
+probe:
+  port: 4096
+  # The app's own health endpoint. Every other path answers 200 with the page's
+  # HTML shell, so a bare status code proves nothing: this path returns JSON.
+  path: /api/health
+  # HOME is /moose, not the base's /home/moose. OpenCode's folder picker starts
+  # in HOME, and moose mounts the folders at /moose/projects and
+  # /moose/extra/<Name>, so HOME has to be the directory that holds them. The
+  # Dockerfile sets the same value; here it stands in for the data bind.
+  env:
+    HOME: /moose
+  tmpfs: [/tmp]
+  data: [/moose]
+  timeout: 60

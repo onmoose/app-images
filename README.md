@@ -8,6 +8,8 @@ This repo holds **packaging only**. It never changes an app's code. A fix to the
 
 It also builds moose's **terminal apps**: command-line tools such as AI coding agents, opened in a browser tab. They build on one base image, `moose-terminal`, whose small project page and start script are our own source (`images/moose-terminal/src/`). Some of these tools come as an npm package or a GitHub release binary, not as a git repo to build. See [Other kinds of source](#other-kinds-of-source).
 
+A terminal app that ships **its own web UI** builds on the base for the tools it brings (git, gh, Node, Python, ripgrep, mise) and runs its own server instead of the base's project page. `images/opencode` is the first one: `opencode web` on port 4096.
+
 ## How it works
 
 One folder per image under `images/`. A folder points at the upstream repo at a pinned commit. There are no forks: the build fetches exactly that commit and builds it.
