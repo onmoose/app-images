@@ -6,7 +6,7 @@
 # Dockerfile). The npm package carries the same version numbers as the native
 # builds, so Renovate follows its releases here.
 npm: "@anthropic-ai/claude-code"
-version: 2.1.322
+version: 2.1.325
 revision: 1
 # The license of what this image holds: moose-terminal and our start script.
 # Claude Code itself is not in the image. It is "All rights reserved" by
