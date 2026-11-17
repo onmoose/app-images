@@ -8,18 +8,28 @@
 # moose-terminal brings git, gh, Node, Python, ripgrep and mise, which is what
 # makes the app usable inside the sandbox.
 #
-# MIT, so the binary is in the image and a box never downloads it. The npm
-# package carries the same version numbers as the GitHub releases, so Renovate
-# follows its releases here.
-npm: opencode-ai
-version: 1.19.5
+# OpenCode 2.x always asks for a server password. moose already puts the app
+# behind the box login, so start.sh runs OpenCode on 127.0.0.1:4097 with a
+# random password, and proxy.js serves port 4096 and adds the password to every
+# request (see both files).
+#
+# MIT, so the binary is in the image and a box never downloads it. 2.x is the
+# npm package @opencode/cli, with the same version numbers as the GitHub
+# releases, so Renovate follows its releases here. The old package, opencode-ai,
+# holds only 1.x.
+npm: "@opencode/cli"
+version: 2.3.0
 revision: 1
 license: MIT
 probe:
   port: 4096
-  # The app's own health endpoint. Every other path answers 200 with the page's
-  # HTML shell, so a bare status code proves nothing: this path returns JSON.
-  path: /api/health
+  # /api/session answers JSON only with the password, and every page path
+  # answers 200 with the HTML shell, so a bare status code proves little.
+  # start.sh asks /api/session through the proxy with no password, and prints
+  # this line only when that worked. So the line proves that both processes run
+  # and that the proxy adds the password.
+  path: /api/session
+  log: "the API answers through the proxy"
   # HOME is /moose, not the base's /home/moose. OpenCode's folder picker starts
   # in HOME, and moose mounts the folders at /moose/projects and
   # /moose/extra/<Name>, so HOME has to be the directory that holds them. The
@@ -28,4 +38,4 @@ probe:
     HOME: /moose
   tmpfs: [/tmp]
   data: [/moose]
-  timeout: 60
+  timeout: 90
