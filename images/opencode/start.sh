@@ -55,24 +55,40 @@ pids+=("$!")
 ask() {
   printf 'user = "opencode:%s"\n' "$OPENCODE_PASSWORD" | curl -K - -fsS -o /dev/null --max-time 3 "$1"
 }
+# A server that never answers stops the container with a reason in the log, so
+# moose restarts it instead of routing to a dead app.
+ready=
 for _ in $(seq 120); do
   kill -0 "${pids[0]}" 2>/dev/null || { echo "error: opencode serve exited before it answered" >&2; exit 1; }
-  ask http://127.0.0.1:4097/api/session 2>/dev/null && break
+  if ask http://127.0.0.1:4097/api/session 2>/dev/null; then ready=1; break; fi
   sleep 0.5
 done
+if [ -z "$ready" ]; then
+  echo "error: opencode serve did not answer on 127.0.0.1:4097 after 120 tries (about 60 s)" >&2
+  stop
+  exit 1
+fi
 
 node /opt/opencode/proxy.js &
 pids+=("$!")
 
 # Check the whole path once: a request with no password, through the proxy,
 # must reach the API. The image probe waits for this line.
+ready=
 for _ in $(seq 60); do
+  kill -0 "${pids[1]}" 2>/dev/null || { echo "error: proxy.js exited before it answered" >&2; stop; exit 1; }
   if curl -fsS -o /dev/null --max-time 3 http://127.0.0.1:4096/api/session 2>/dev/null; then
     echo "opencode: the API answers through the proxy on port 4096"
+    ready=1
     break
   fi
   sleep 0.5
 done
+if [ -z "$ready" ]; then
+  echo "error: the API did not answer through the proxy on port 4096 after 60 tries (about 30 s)" >&2
+  stop
+  exit 1
+fi
 
 # Wait for the first of the two to exit, then stop the other one.
 status=0

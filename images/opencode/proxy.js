@@ -42,7 +42,10 @@ function copyHeaders(raw, skip) {
   return out;
 }
 
-const agent = new http.Agent({ keepAlive: true });
+// No keep-alive to OpenCode. A kept socket that OpenCode closes after its idle
+// timeout can fail the next request, and a POST is not retried. A new
+// connection on loopback costs almost nothing.
+const agent = new http.Agent({ keepAlive: false });
 
 const server = http.createServer((req, res) => {
   const headers = copyHeaders(req.rawHeaders, HOP);
@@ -56,7 +59,16 @@ const server = http.createServer((req, res) => {
     agent,
   });
   up.on('response', (upRes) => {
-    res.writeHead(upRes.statusCode, upRes.statusMessage, copyHeaders(upRes.rawHeaders, HOP));
+    try {
+      res.writeHead(upRes.statusCode, upRes.statusMessage, copyHeaders(upRes.rawHeaders, HOP));
+    } catch (err) {
+      // A header Node refuses to send: answer 502, do not crash the proxy.
+      console.error('proxy: bad upstream response:', err.code || err.message);
+      upRes.resume();
+      res.writeHead(502, { 'Content-Type': 'text/plain' });
+      res.end('OpenCode sent a response the proxy cannot pass on\n');
+      return;
+    }
     // Send the headers now, so an event stream starts before its first event.
     res.flushHeaders();
     upRes.pipe(res);
