@@ -34,7 +34,7 @@ cosign verify ghcr.io/onmoose/<image>@<digest> \
 ## upstream.yml
 
 ```yaml
-repo: CopilotKit/OpenMuse        # owner/name on the host below
+repo: CopilotKit/openfuse        # owner/name on the host below
 ref_type: branch                 # branch or tag: what we follow
 ref: main                        # the branch or tag name
 commit: fed01e9d...              # the full commit SHA we build, never a tag object's SHA (Renovate keeps it current)
@@ -108,7 +108,7 @@ A tool that our own Dockerfile downloads (ttyd in `moose-terminal`) is pinned wi
 Needs Docker with buildx and Python with PyYAML.
 
 ```bash
-python3 tools/build.py openmuse-server     # fetch, build, probe; nothing is pushed
+python3 tools/build.py openfuse-server     # fetch, build, probe; nothing is pushed
 ```
 
 ## Adding an image

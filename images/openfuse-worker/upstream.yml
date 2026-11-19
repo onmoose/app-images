@@ -1,9 +1,9 @@
-# OpenMuse's browser worker: a token-protected Playwright/Chromium service the API drives.
+# OpenFuse's browser worker: a token-protected Playwright/Chromium service the API drives.
 # Upstream's own Dockerfile, unchanged.
-repo: CopilotKit/OpenMuse
+repo: CopilotKit/openfuse
 ref_type: branch
 ref: main
-commit: a4944f4c471d3dc93b8bfc060b5da309b5216ab2
+commit: 67580f16059d9c10111db00768e8a235d06cafdc
 revision: 1
 license: MIT
 context: apps/worker

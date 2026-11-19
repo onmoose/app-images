@@ -1,16 +1,18 @@
 # syntax=docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
-# Context: the OpenMuse repo at the commit in upstream.yml.
-FROM node:24.22.2-bookworm-slim@sha256:c86ecead9e55a5210ac1727de38a4ca840bf03dcaf34dc9749addbf383b1920c AS build
+# Context: the OpenFuse repo at the commit in upstream.yml.
+FROM node:24.22.3-bookworm-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54 AS build
 RUN corepack enable
 WORKDIR /src
 COPY . .
 RUN pnpm install --frozen-lockfile
 RUN pnpm build:server
 # Production dependencies of the root package only: the server needs nothing from apps/mobile.
+# `--filter .` picks the root package by its path, not its name, so an upstream rename
+# of the package does not empty the install.
 RUN rm -rf node_modules apps/*/node_modules \
- && CI=true pnpm install --frozen-lockfile --prod --filter openmuse
+ && CI=true pnpm install --frozen-lockfile --prod --filter .
 
-FROM node:24.22.2-bookworm-slim@sha256:c86ecead9e55a5210ac1727de38a4ca840bf03dcaf34dc9749addbf383b1920c
+FROM node:24.22.3-bookworm-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54
 WORKDIR /app
 COPY --from=build /src/package.json ./
 COPY --from=build /src/node_modules ./node_modules

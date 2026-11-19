@@ -1,9 +1,9 @@
-# OpenMuse's web client (the Expo web export), served by nginx, which also
+# OpenFuse's web client (the Expo web export), served by nginx, which also
 # proxies /api/ to the API service named `server`. Upstream ships no image for it.
-repo: CopilotKit/OpenMuse
+repo: CopilotKit/openfuse
 ref_type: branch
 ref: main
-commit: a4944f4c471d3dc93b8bfc060b5da309b5216ab2
+commit: 67580f16059d9c10111db00768e8a235d06cafdc
 revision: 1
 license: MIT
 probe:
