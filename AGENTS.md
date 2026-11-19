@@ -30,7 +30,7 @@ tools/
 renovate.json                 # keeps pinned commits, base images and actions current
 ```
 
-One image per folder. Several images can share one upstream commit (the three `openmuse-*` images do). Renovate groups those so they move in one PR. Every upstream needs a `packageRules` group in `renovate.json` that matches its folders by path (see the OpenMuse group), with the weekly schedule. The group also pulls in the base images of our Dockerfiles. A base image change alone keeps the tag the same, so its PR fails CI until someone bumps `revision:`. Next to a commit move, the tag changes on its own. When a base image moves in a week where upstream does not, push a `revision:` bump to the Renovate branch.
+One image per folder. Several images can share one upstream commit (the three `openfuse-*` images do). Renovate groups those so they move in one PR. Every upstream needs a `packageRules` group in `renovate.json` that matches its folders by path (see the OpenFuse group), with the weekly schedule. The group also pulls in the base images of our Dockerfiles. A base image change alone keeps the tag the same, so its PR fails CI until someone bumps `revision:`. Next to a commit move, the tag changes on its own. When a base image moves in a week where upstream does not, push a `revision:` bump to the Renovate branch.
 
 ## Commands
 
@@ -51,7 +51,7 @@ Needs Docker with buildx and Python with PyYAML. Builds are `linux/amd64` only. 
 
 **The probe is moose's sandbox.** It runs the image with `--cap-drop ALL` and `no-new-privileges`, once as root and once as uid 10001, and fails a start binary that carries file capabilities. An image that fails is never pushed. Do not weaken the probe to get an image through. If the image cannot pass under these rules, it cannot run on a box either. The probe copies how the moose OS runs an app, so a change to that model in `onmoose/os` needs the same change in `tools/build.py`, in the same unit of work.
 
-**`as:` narrows the probe only for a real reason.** Drop `root` from `as:` only when moose runs that app as its own service user, and say why in a comment (see `images/openmuse-web/upstream.yml`).
+**`as:` narrows the probe only for a real reason.** Drop `root` from `as:` only when moose runs that app as its own service user, and say why in a comment (see `images/openfuse-web/upstream.yml`).
 
 **Probe `env:` holds throwaway values only.** This repo is public. Use obvious fake values like `probe-only-...`. Never a real key, token or password.
 
@@ -93,7 +93,7 @@ These rules are the same across the moose repos (`onmoose/os` `CLAUDE.md` # Work
 - **No em dashes.** Anywhere. Use a colon, a comma, or two sentences. This is a forward rule: fix them in text you are already changing, do not sweep old text.
 - **No line wrapping in markdown.** One continuous line per paragraph. Viewers reflow, and hard wraps make diffs harder to read.
 - **Explain a technical term once, in plain words, the first time it appears.** "an SBOM (a list of what is inside)", then just "SBOM".
-- **Issue and PR titles are short and active.** Lead with a verb: "Add the Foo image", "Bump openmuse-web to revision 2".
+- **Issue and PR titles are short and active.** Lead with a verb: "Add the Foo image", "Bump openfuse-web to revision 2".
 - **Do not narrate your own process.** Write the finding and its evidence, not the story of how you got there.
 - **Skip small issues.** Raise a follow-up only for a real bug, a security risk, or something a user will hit. Guesses and nice-to-haves are noise. Say them in one line, or drop them.
 

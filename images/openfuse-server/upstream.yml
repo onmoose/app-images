@@ -1,10 +1,10 @@
-# OpenMuse's API: Hono plus the CopilotKit runtime, the task engine, and storage.
+# OpenFuse's API: Hono plus the CopilotKit runtime, the task engine, and storage.
 # Upstream ships no Dockerfile for it, so the one in this folder is ours. It runs
 # upstream's own production commands: `pnpm build:server`, then `pnpm start`.
-repo: CopilotKit/OpenMuse
+repo: CopilotKit/openfuse
 ref_type: branch
 ref: main
-commit: a4944f4c471d3dc93b8bfc060b5da309b5216ab2
+commit: 67580f16059d9c10111db00768e8a235d06cafdc
 revision: 1
 license: MIT
 probe:
@@ -16,7 +16,7 @@ probe:
     AGENT_BACKEND: model
     MODEL: openai/probe
     CPK_INTELLIGENCE_API_KEY: probe-only
-    OPENMUSE_ACCESS_KEY: probe-only-access-key-0123456789
+    OPENFUSE_ACCESS_KEY: probe-only-access-key-0123456789
     TOKEN_ENCRYPTION_KEY: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
     PUBLIC_API_URL: http://localhost:8787
   tmpfs: [/tmp]
