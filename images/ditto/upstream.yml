@@ -5,8 +5,8 @@
 # upload servers into the bundle (src/lib/appRelays.ts), so the defaults stand.
 repo: soapbox-pub/ditto
 ref_type: tag
-ref: v2.46.1
-commit: 9153791ad13588cee4f84a0f1efa2c8cd1f1bc91
+ref: v2.46.6
+commit: f06fb26982147954192d2862f47f17cb98d4b5db
 host: gitlab.com
 revision: 1
 license: AGPL-3.0
