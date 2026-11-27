@@ -74,7 +74,7 @@ Needs Docker with buildx and Python with PyYAML. Builds are `linux/amd64` only. 
 3. Run `tools/build.py <image>` until the probe passes as every identity in `as:`.
 4. Open the PR. **A request to build an image is also a request to open its PR, so do not ask again.** Before you push, read the commit message and the PR body once more: the repo is public, so neither may name a private repo or its internals.
 5. Merge the PR once CI passes and nothing is left to check. Stop and ask instead when CI fails, a probe needed a narrowed `as:`, or the change holds a call the user has not made yet (a license outside the list in step 1, a dropped service).
-6. After the merge publishes, check once that an anonymous pull works (`docker logout ghcr.io`, then `docker pull`). A box pulls without logging in.
+6. After the merge, check that the `publish` job on `main` passed. A box pulls without logging in, so that job also reads the new image with no login and fails when the package came out private. If it fails there, make the package public in its GitHub settings and run the workflow again for that image.
 
 ## Renovate pull requests
 
@@ -83,7 +83,7 @@ Renovate opens one PR per upstream each week (see # Layout). Handle each one lik
 1. CI is green: merge it. We build what upstream releases, so there is no upstream code to review.
 2. CI fails with `already exists. Bump revision:`: the tag did not change (a base image moved, or upstream did not). Push a `revision:` bump to the Renovate branch, wait for CI, then merge.
 3. CI fails in the build or the probe: do not merge. Find out why, and fix our packaging on the Renovate branch, or ask the user.
-4. After each merge, check that the `publish` job on `main` passed, then check one anonymous pull (# Adding an image, step 6).
+4. After each merge, check that the `publish` job on `main` passed. It also checks the anonymous pull (# Adding an image, step 6).
 
 ## How to write
 

@@ -100,3 +100,17 @@ jobs:
         run: python3 tools/build.py "${{ matrix.image }}" --push --if-exists "${{ matrix.if_exists }}" --cache gha
       - if: steps.push.outputs.ref != ''
         run: cosign sign --yes "${{ steps.push.outputs.ref }}"
+      # A box pulls without logging in. So check, with no login, that the new
+      # digest can be read. This fails when the package came out private.
+      - if: steps.push.outputs.ref != ''
+        env:
+          REF: ${{ steps.push.outputs.ref }}
+        run: |
+          repo="${REF#ghcr.io/}"; repo="${repo%@*}"; digest="${REF#*@}"
+          token=$(curl -fsS "https://ghcr.io/token?scope=repository:${repo}:pull" | jq -r .token) \
+            || { echo "::error::no anonymous pull token for ${repo}. Is the package public?"; exit 1; }
+          curl -fsS -o /dev/null -H "Authorization: Bearer ${token}" \
+            -H "Accept: application/vnd.oci.image.index.v1+json, application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.v2+json" \
+            "https://ghcr.io/v2/${repo}/manifests/${digest}" \
+            || { echo "::error::anonymous pull of ${REF} failed. Is the package public?"; exit 1; }
+          echo "anonymous pull works: ${REF}"
