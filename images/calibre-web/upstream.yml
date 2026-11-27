@@ -23,7 +23,7 @@ repo: janeczku/calibre-web
 ref_type: tag
 ref: 0.6.27
 commit: c3756a903e7d91b2ab7e12c1b5ff818a61cc1e16
-revision: 1
+revision: 2
 license: GPL-3.0-or-later
 probe:
   port: 8083
